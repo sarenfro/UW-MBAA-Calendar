@@ -1,153 +1,254 @@
 import { db, calendarsTable, eventsTable } from "@workspace/db";
 
-type SeedEvent = {
-  calendarKey: string;
-  title: string;
-  description: string | null;
-  location: string | null;
-  startOffsetDays: number;
-  startHour: number;
-  durationHours: number;
-  allDay?: boolean;
-};
+function googleIcsUrl(calendarId: string): string {
+  return `https://calendar.google.com/calendar/ical/${encodeURIComponent(calendarId)}/public/basic.ics`;
+}
 
 const calendars = [
   {
-    key: "personal",
-    name: "Personal",
-    description: "Life outside of work — workouts, errands, evenings.",
+    name: "Business & Policy",
+    description: "Business law, policy trends, and regulatory environment discussions.",
+    color: "#1E40AF",
+    timezone: "America/Los_Angeles",
+    owner: "Business & Policy",
+    subscriptionUrl: googleIcsUrl("umtkt80d79js17u12okdb98pug@group.calendar.google.com"),
+  },
+  {
+    name: "Career Management",
+    description: "Career workshops, recruiting events, and job search resources.",
+    color: "#0369A1",
+    timezone: "America/Los_Angeles",
+    owner: "UW Foster MBAA",
+    subscriptionUrl: googleIcsUrl("ckpv907tn40jppjvbn9fejo4mo@group.calendar.google.com"),
+  },
+  {
+    name: "Challenge 4 Charity",
+    description: "Annual charity competition events and fundraising activities.",
+    color: "#DC2626",
+    timezone: "America/Los_Angeles",
+    owner: "Challenge 4 Charity",
+    subscriptionUrl: googleIcsUrl("6a1gv8adbkbpcqc0vc9c264jd0@group.calendar.google.com"),
+  },
+  {
+    name: "Consulting Society",
+    description: "Consulting case workshops, alumni panels, and networking events.",
     color: "#7C3AED",
     timezone: "America/Los_Angeles",
-    owner: "You",
+    owner: "Consulting Society",
+    subscriptionUrl: googleIcsUrl("ifdqr2176anld3ftv97jao0a14@group.calendar.google.com"),
   },
   {
-    key: "work",
-    name: "Work",
-    description: "Engineering team standups, reviews, and 1:1s.",
-    color: "#0EA5E9",
+    name: "Data & Analytics Club",
+    description: "Data science workshops, analytics case studies, and industry talks.",
+    color: "#0891B2",
     timezone: "America/Los_Angeles",
-    owner: "Acme Studio",
+    owner: "Data & Analytics Club",
+    subscriptionUrl: googleIcsUrl("gshjd39sflhj8sb9lqcg59mbbg@group.calendar.google.com"),
   },
   {
-    key: "team",
-    name: "Design Crit",
-    description: "Shared design critique and product reviews.",
-    color: "#F97316",
+    name: "Diversity in Business",
+    description: "Events celebrating diversity, equity, and inclusion in business.",
+    color: "#EA580C",
     timezone: "America/Los_Angeles",
-    owner: "Design Guild",
+    owner: "Diversity in Business",
+    subscriptionUrl: googleIcsUrl("h1gu6epp0vo0qk71dlmko3gauc@group.calendar.google.com"),
   },
   {
-    key: "holidays",
-    name: "Holidays",
-    description: "US public holidays and observances.",
-    color: "#16A34A",
-    timezone: "UTC",
-    owner: "United States",
+    name: "EVCC",
+    description: "Entrepreneurship & Venture Capital Club events and speaker series.",
+    color: "#15803D",
+    timezone: "America/Los_Angeles",
+    owner: "EVCC",
+    subscriptionUrl: googleIcsUrl("0gg5h6lpg7i6enm8d55jms2vb8@group.calendar.google.com"),
   },
   {
-    key: "birthdays",
-    name: "Birthdays",
-    description: "Friends and family birthdays.",
+    name: "Finance Society",
+    description: "Finance workshops, networking events, and industry speaker series.",
+    color: "#059669",
+    timezone: "America/Los_Angeles",
+    owner: "Finance Society",
+    subscriptionUrl: googleIcsUrl("uhj0s1l7j3cer94ril88r5e6m4@group.calendar.google.com"),
+  },
+  {
+    name: "Foster Creative",
+    description: "Creative arts and design events within the Foster community.",
+    color: "#D97706",
+    timezone: "America/Los_Angeles",
+    owner: "Foster Creative",
+    subscriptionUrl: googleIcsUrl("doco30jk12bqeco4r2r8oqqup0@group.calendar.google.com"),
+  },
+  {
+    name: "Foster MBAA",
+    description: "Official Foster MBA Association events and announcements.",
+    color: "#4B2E83",
+    timezone: "America/Los_Angeles",
+    owner: "UW Foster MBAA",
+    subscriptionUrl: googleIcsUrl("hbbp84mpp11jf1hjh0lgrqr3h4@group.calendar.google.com"),
+  },
+  {
+    name: "Foster Veterans Association",
+    description: "Events and networking for student veterans at Foster.",
+    color: "#991B1B",
+    timezone: "America/Los_Angeles",
+    owner: "Foster Veterans Association",
+    subscriptionUrl: googleIcsUrl("r3nualb8i45lqo8jhi4kc83bq4@group.calendar.google.com"),
+  },
+  {
+    name: "Global Business Association",
+    description: "International business events, cultural celebrations, and global career talks.",
+    color: "#2563EB",
+    timezone: "America/Los_Angeles",
+    owner: "Global Business Association",
+    subscriptionUrl: googleIcsUrl("1kuqaqjodofr2qosnkok657dcs@group.calendar.google.com"),
+  },
+  {
+    name: "Healthcare & Biotech Club",
+    description: "Healthcare industry events, case competitions, and networking.",
+    color: "#0D9488",
+    timezone: "America/Los_Angeles",
+    owner: "Healthcare & Biotech Club",
+    subscriptionUrl: googleIcsUrl("r19gbe5p9sngqsb6ojd5tstfcs@group.calendar.google.com"),
+  },
+  {
+    name: "Level Up!",
+    description: "Personal development workshops and skill-building events.",
+    color: "#B45309",
+    timezone: "America/Los_Angeles",
+    owner: "Level Up!",
+    subscriptionUrl: googleIcsUrl("ncqejqskulvq2t1oq4ikl91flo@group.calendar.google.com"),
+  },
+  {
+    name: "Marketing Association",
+    description: "Marketing workshops, brand competitions, and industry speaker series.",
     color: "#E11D48",
     timezone: "America/Los_Angeles",
-    owner: "Family & Friends",
+    owner: "Marketing Association",
+    subscriptionUrl: googleIcsUrl("3ishaonfvjfnfn220gc3hkbiko@group.calendar.google.com"),
+  },
+  {
+    name: "MBA Huddle",
+    description: "All-MBA community events, socials, and announcements.",
+    color: "#6366F1",
+    timezone: "America/Los_Angeles",
+    owner: "UW Foster MBAA",
+    subscriptionUrl: googleIcsUrl("iv1d7tlspq6bj5tlv84hfd3r1k@group.calendar.google.com"),
+  },
+  {
+    name: "MBACM",
+    description: "Career Management program events, workshops, and recruiting.",
+    color: "#8B5CF6",
+    timezone: "America/Los_Angeles",
+    owner: "UW Foster MBAA",
+    subscriptionUrl: googleIcsUrl("3c012536e3756189e09891efbaaeda724cefcb0c0e860f26935623646af3124a@group.calendar.google.com"),
+  },
+  {
+    name: "Net Impact",
+    description: "Sustainability, social impact, and corporate responsibility events.",
+    color: "#16A34A",
+    timezone: "America/Los_Angeles",
+    owner: "Net Impact",
+    subscriptionUrl: googleIcsUrl("7h5b604egcmh1gqrtkqncar9qc@group.calendar.google.com"),
+  },
+  {
+    name: "Operations Club",
+    description: "Operations, supply chain, and process improvement events.",
+    color: "#78350F",
+    timezone: "America/Los_Angeles",
+    owner: "Operations Club",
+    subscriptionUrl: googleIcsUrl("4047afhvidsf7jklgslhur44ig@group.calendar.google.com"),
+  },
+  {
+    name: "Out in Business",
+    description: "LGBTQ+ inclusive events, networking, and professional development.",
+    color: "#EC4899",
+    timezone: "America/Los_Angeles",
+    owner: "Out in Business",
+    subscriptionUrl: googleIcsUrl("baphjuktm8qn0qhrjjopml50fc@group.calendar.google.com"),
+  },
+  {
+    name: "Outdoor & Sports Industry Club",
+    description: "Outdoor industry treks, speaker series, and adventure events.",
+    color: "#65A30D",
+    timezone: "America/Los_Angeles",
+    owner: "Outdoor & Sports Industry Club",
+    subscriptionUrl: googleIcsUrl("e4tmd1do9np12atu7hie0dsq5c@group.calendar.google.com"),
+  },
+  {
+    name: "Program Office",
+    description: "Official program announcements, deadlines, and academic events.",
+    color: "#6D28D9",
+    timezone: "America/Los_Angeles",
+    owner: "UW Foster MBAA",
+    subscriptionUrl: googleIcsUrl("fef4c2vnm1nfjmirha7730fdn0@group.calendar.google.com"),
+  },
+  {
+    name: "Strategy Club",
+    description: "Strategy case workshops, competitions, and industry discussions.",
+    color: "#1D4ED8",
+    timezone: "America/Los_Angeles",
+    owner: "Strategy Club",
+    subscriptionUrl: googleIcsUrl("btpa5raf4mco0gboutomt2gihs@group.calendar.google.com"),
+  },
+  {
+    name: "Student Affairs",
+    description: "Campus life events, student resources, and community programming.",
+    color: "#BE185D",
+    timezone: "America/Los_Angeles",
+    owner: "UW Foster MBAA",
+    subscriptionUrl: googleIcsUrl("macbl8tshkos5p7srlk9n5ubjo@group.calendar.google.com"),
+  },
+  {
+    name: "Tech Club",
+    description: "Technology industry events, hackathons, and startup discussions.",
+    color: "#0F766E",
+    timezone: "America/Los_Angeles",
+    owner: "Tech Club",
+    subscriptionUrl: googleIcsUrl("haqa40tsmp6emhv27u362fgvbk@group.calendar.google.com"),
+  },
+  {
+    name: "Wellness",
+    description: "Wellness workshops, mindfulness events, and health-focused programming.",
+    color: "#84CC16",
+    timezone: "America/Los_Angeles",
+    owner: "Wellness",
+    subscriptionUrl: googleIcsUrl("qpdt3k9u7hrke17si6ku8ui1ls@group.calendar.google.com"),
+  },
+  {
+    name: "Wine Club",
+    description: "Wine tastings, vineyard visits, and oenology education events.",
+    color: "#7E22CE",
+    timezone: "America/Los_Angeles",
+    owner: "Wine Club",
+    subscriptionUrl: googleIcsUrl("ocfd5o3r7jd8bd5vpr7c7vqkfo@group.calendar.google.com"),
+  },
+  {
+    name: "Women in Business",
+    description: "Events supporting women in leadership and professional development.",
+    color: "#C026D3",
+    timezone: "America/Los_Angeles",
+    owner: "Women in Business",
+    subscriptionUrl: googleIcsUrl("16gi343a3rpoavgf2na49ust90@group.calendar.google.com"),
   },
 ] as const;
 
-const seedEvents: SeedEvent[] = [
-  // Past week
-  { calendarKey: "work", title: "Quarterly planning kickoff", description: "Aligning H1 roadmap with leadership.", location: "Boardroom A", startOffsetDays: -6, startHour: 10, durationHours: 2 },
-  { calendarKey: "personal", title: "Long run", description: "10k along the waterfront.", location: "Embarcadero", startOffsetDays: -5, startHour: 7, durationHours: 1 },
-  { calendarKey: "team", title: "Mobile redesign critique", description: "Round 2 of the new onboarding flow.", location: "Studio – East", startOffsetDays: -4, startHour: 14, durationHours: 1 },
-  { calendarKey: "work", title: "1:1 with Priya", description: null, location: "Phone booth 3", startOffsetDays: -3, startHour: 11, durationHours: 1 },
-  { calendarKey: "personal", title: "Pottery class", description: "Wheel throwing — bring apron.", location: "Clay Co. Studio", startOffsetDays: -2, startHour: 18, durationHours: 2 },
-
-  // This week — including today
-  { calendarKey: "work", title: "Team standup", description: "Daily sync.", location: "Zoom", startOffsetDays: 0, startHour: 9, durationHours: 1 },
-  { calendarKey: "work", title: "Customer interview – Hana", description: "Discovery for the dashboard project.", location: "Google Meet", startOffsetDays: 0, startHour: 13, durationHours: 1 },
-  { calendarKey: "personal", title: "Dentist", description: "Cleaning + checkup.", location: "Bright Smile Dental", startOffsetDays: 0, startHour: 16, durationHours: 1 },
-  { calendarKey: "team", title: "Weekly design review", description: "Bring two screens for feedback.", location: "Studio – West", startOffsetDays: 1, startHour: 15, durationHours: 1 },
-  { calendarKey: "work", title: "Engineering all-hands", description: "Quarterly engineering roundup.", location: "Auditorium", startOffsetDays: 2, startHour: 10, durationHours: 2 },
-  { calendarKey: "personal", title: "Coffee with Marcus", description: "Catch up at Sightglass.", location: "Sightglass SoMa", startOffsetDays: 2, startHour: 8, durationHours: 1 },
-  { calendarKey: "birthdays", title: "Lena's birthday", description: "She's turning 32.", location: null, startOffsetDays: 3, startHour: 0, durationHours: 24, allDay: true },
-  { calendarKey: "work", title: "Sprint planning", description: null, location: "Boardroom B", startOffsetDays: 3, startHour: 13, durationHours: 2 },
-  { calendarKey: "team", title: "Portfolio salon", description: "Bring a piece you want feedback on.", location: "The Loft", startOffsetDays: 4, startHour: 19, durationHours: 2 },
-  { calendarKey: "personal", title: "Farmers market", description: "Pick up tomatoes and bread.", location: "Ferry Building", startOffsetDays: 5, startHour: 9, durationHours: 2 },
-
-  // Next week
-  { calendarKey: "work", title: "Design + engineering sync", description: null, location: "Zoom", startOffsetDays: 7, startHour: 11, durationHours: 1 },
-  { calendarKey: "personal", title: "Movie night", description: "Whatever's playing at the Roxie.", location: "Roxie Theater", startOffsetDays: 8, startHour: 20, durationHours: 2 },
-  { calendarKey: "work", title: "Quarterly review presentation", description: "Present Q1 results to the leadership team.", location: "Boardroom A", startOffsetDays: 9, startHour: 14, durationHours: 2 },
-  { calendarKey: "holidays", title: "Memorial Day (observed)", description: "Federal holiday — office closed.", location: null, startOffsetDays: 10, startHour: 0, durationHours: 24, allDay: true },
-  { calendarKey: "personal", title: "Hike Mt. Tam", description: "Bring water + snacks.", location: "Mount Tamalpais", startOffsetDays: 11, startHour: 8, durationHours: 5 },
-  { calendarKey: "team", title: "Brand jam", description: "Working session on the new identity system.", location: "Studio – East", startOffsetDays: 12, startHour: 13, durationHours: 3 },
-  { calendarKey: "birthdays", title: "Dad's birthday", description: "Call in the morning.", location: null, startOffsetDays: 13, startHour: 0, durationHours: 24, allDay: true },
-
-  // Further out — week 3 / 4
-  { calendarKey: "work", title: "Executive offsite", description: "All-day strategic planning offsite.", location: "Cavallo Point", startOffsetDays: 16, startHour: 0, durationHours: 24, allDay: true },
-  { calendarKey: "personal", title: "Yoga retreat weekend", description: "Two-night retreat in the redwoods.", location: "Sea Ranch", startOffsetDays: 19, startHour: 0, durationHours: 48, allDay: true },
-  { calendarKey: "team", title: "Annual portfolio show", description: "Studio open house.", location: "Studio – Main Hall", startOffsetDays: 22, startHour: 17, durationHours: 4 },
-  { calendarKey: "work", title: "Hiring panel — design lead", description: "Three back-to-back interviews.", location: "Phone booth 1", startOffsetDays: 24, startHour: 10, durationHours: 3 },
-  { calendarKey: "personal", title: "Anniversary dinner", description: "Reservation at State Bird.", location: "State Bird Provisions", startOffsetDays: 25, startHour: 19, durationHours: 2 },
-];
-
 async function main(): Promise<void> {
-  console.log("Seeding calendars + events...");
+  console.log("Seeding MBAA calendars...");
 
-  // Idempotent: clear and reseed
   await db.delete(eventsTable);
   await db.delete(calendarsTable);
 
-  const inserted = await db
-    .insert(calendarsTable)
-    .values(
-      calendars.map((c) => ({
-        name: c.name,
-        description: c.description,
-        color: c.color,
-        timezone: c.timezone,
-        owner: c.owner,
-      })),
-    )
-    .returning();
-
-  const idByName = new Map<string, number>();
-  inserted.forEach((row, i) => {
-    idByName.set(calendars[i].key, row.id);
-  });
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const eventRows = seedEvents.map((e) => {
-    const calendarId = idByName.get(e.calendarKey);
-    if (calendarId == null) {
-      throw new Error(`Unknown calendar key: ${e.calendarKey}`);
-    }
-
-    const startAt = new Date(today);
-    startAt.setDate(startAt.getDate() + e.startOffsetDays);
-    startAt.setHours(e.startHour, 0, 0, 0);
-
-    const endAt = new Date(startAt);
-    endAt.setHours(endAt.getHours() + e.durationHours);
-
-    return {
-      calendarId,
-      title: e.title,
-      description: e.description,
-      location: e.location,
-      startAt,
-      endAt,
-      allDay: e.allDay ?? false,
-    };
-  });
-
-  await db.insert(eventsTable).values(eventRows);
-
-  console.log(
-    `Seeded ${calendars.length} calendars and ${eventRows.length} events.`,
+  await db.insert(calendarsTable).values(
+    calendars.map((c) => ({
+      name: c.name,
+      description: c.description,
+      color: c.color,
+      timezone: c.timezone,
+      owner: c.owner,
+      subscriptionUrl: c.subscriptionUrl,
+    })),
   );
+
+  console.log(`Seeded ${calendars.length} calendars. Run sync-calendars to fetch events.`);
 }
 
 main()

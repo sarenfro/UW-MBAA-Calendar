@@ -9,6 +9,7 @@ export const calendarsTable = pgTable("calendars", {
   color: text("color").notNull(),
   timezone: text("timezone").notNull().default("UTC"),
   owner: text("owner").notNull(),
+  subscriptionUrl: text("subscription_url"),
 });
 
 export const insertCalendarSchema = createInsertSchema(calendarsTable).omit({
