@@ -1,15 +1,36 @@
 export * from "./generated/api";
 // Re-export TypeScript interfaces, excluding names already exported as Zod schemas
-// from ./generated/api (CreateMemberBody, UpdateMemberBody conflict).
+// from ./generated/api (DownloadClubRosterCsvParams, GetClubRosterParams conflict).
 export type {
   Calendar,
   CalendarBreakdown,
+  Club,
+  ClubPricing,
+  ClubRoster,
+  ClubSummary,
   DashboardSummary,
   ErrorResponse,
   Event,
+  ExpiringMember,
   HealthStatus,
+  LapsedMember,
   ListEventsParams,
-  ListMembersParams,
   ListUpcomingEventsParams,
   Member,
+  MemberMembershipsResponse,
+  MemberProgram,
+  MembershipRecord,
+  MembershipSummary,
+  ProgramBreakdown,
+  RenewalForecast,
+  RequestAccessBody,
+  RequestAccessResponse,
+  RosterMember,
+  RosterMemberProgram,
+  RosterMembership,
+  SearchMembersParams,
+  TokenErrorResponse,
+  TokenErrorResponseCode,
+  TopClub,
+  YearOverYearEntry,
 } from "./generated/types";

@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import * as zod from "zod";
 
@@ -147,76 +147,6 @@ export const ListUpcomingEventsResponse = zod.array(
 );
 
 /**
- * @summary List MBAA members
- */
-export const ListMembersQueryParams = zod.object({
-  duesPaid: zod.coerce.boolean().optional(),
-  track: zod.coerce.string().optional(),
-});
-
-export const ListMembersResponseItem = zod.object({
-  id: zod.number(),
-  name: zod.string(),
-  email: zod.string(),
-  graduationYear: zod.number(),
-  track: zod.string().nullable(),
-  committee: zod.string().nullable(),
-  duesPaid: zod.boolean(),
-  notes: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-});
-export const ListMembersResponse = zod.array(ListMembersResponseItem);
-
-/**
- * @summary Add a new MBAA member
- */
-export const CreateMemberBody = zod.object({
-  name: zod.string(),
-  email: zod.string(),
-  graduationYear: zod.number(),
-  track: zod.string().optional(),
-  committee: zod.string().optional(),
-  duesPaid: zod.boolean().optional(),
-  notes: zod.string().optional(),
-});
-
-/**
- * @summary Update a member record
- */
-export const UpdateMemberParams = zod.object({
-  id: zod.coerce.number(),
-});
-
-export const UpdateMemberBody = zod.object({
-  name: zod.string().optional(),
-  email: zod.string().optional(),
-  graduationYear: zod.number().optional(),
-  track: zod.string().optional(),
-  committee: zod.string().optional(),
-  duesPaid: zod.boolean().optional(),
-  notes: zod.string().optional(),
-});
-
-export const UpdateMemberResponse = zod.object({
-  id: zod.number(),
-  name: zod.string(),
-  email: zod.string(),
-  graduationYear: zod.number(),
-  track: zod.string().nullable(),
-  committee: zod.string().nullable(),
-  duesPaid: zod.boolean(),
-  notes: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-});
-
-/**
- * @summary Remove a member
- */
-export const DeleteMemberParams = zod.object({
-  id: zod.coerce.number(),
-});
-
-/**
  * @summary High-level totals and breakdowns for the dashboard
  */
 export const GetDashboardSummaryResponse = zod.object({
@@ -271,4 +201,213 @@ export const GetDashboardSummaryResponse = zod.object({
       upcomingCount: zod.number(),
     }),
   ),
+});
+
+/**
+ * @summary MBAA-wide membership stats for the current academic year
+ */
+export const GetMembershipSummaryResponse = zod.object({
+  currentAcademicYear: zod.string(),
+  totalActiveMembers: zod.number(),
+  totalDuesCollected: zod.number(),
+  activeClubCount: zod.number(),
+  topClubs: zod.array(
+    zod.object({
+      clubId: zod.string().uuid(),
+      clubName: zod.string(),
+      clubSlug: zod.string(),
+      memberCount: zod.number(),
+    }),
+  ),
+});
+
+/**
+ * @summary Search members by name or email (max 20 results)
+ */
+export const SearchMembersQueryParams = zod.object({
+  q: zod.coerce.string(),
+});
+
+export const SearchMembersResponseItem = zod.object({
+  id: zod.string().uuid(),
+  fullName: zod.string(),
+  email: zod.string(),
+  program: zod.enum(["full_time", "evening"]),
+  classYear: zod.number(),
+});
+export const SearchMembersResponse = zod.array(SearchMembersResponseItem);
+
+/**
+ * @summary Get a member and all their club memberships
+ */
+export const GetMemberMembershipsParams = zod.object({
+  id: zod.coerce.string().uuid().describe("Member UUID"),
+});
+
+export const GetMemberMembershipsResponse = zod.object({
+  member: zod.object({
+    id: zod.string().uuid(),
+    fullName: zod.string(),
+    email: zod.string(),
+    program: zod.enum(["full_time", "evening"]),
+    classYear: zod.number(),
+  }),
+  memberships: zod.array(
+    zod.object({
+      clubId: zod.string().uuid(),
+      clubName: zod.string(),
+      clubSlug: zod.string(),
+      termYears: zod.number(),
+      amountPaid: zod.number(),
+      paidAt: zod.coerce.date(),
+      expiresAt: zod.coerce.date(),
+      isActive: zod.boolean(),
+      academicYear: zod.string(),
+    }),
+  ),
+});
+
+/**
+ * @summary List all active clubs
+ */
+export const ListClubsResponseItem = zod.object({
+  id: zod.string().uuid(),
+  name: zod.string(),
+  slug: zod.string(),
+  description: zod.string().nullable(),
+  calendarId: zod.number().nullable(),
+  pricing: zod.record(zod.string(), zod.number()),
+  isActive: zod.boolean(),
+});
+export const ListClubsResponse = zod.array(ListClubsResponseItem);
+
+/**
+ * @summary New/returning breakdown, dues totals, and year-over-year for a club
+ */
+export const GetClubSummaryParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+export const GetClubSummaryResponse = zod.object({
+  club: zod.object({
+    id: zod.string().uuid(),
+    name: zod.string(),
+    slug: zod.string(),
+    description: zod.string().nullable(),
+    calendarId: zod.number().nullable(),
+    pricing: zod.record(zod.string(), zod.number()),
+    isActive: zod.boolean(),
+  }),
+  currentAcademicYear: zod.string(),
+  priorAcademicYear: zod.string(),
+  fullTime: zod.object({
+    newThisYear: zod.number(),
+    returning: zod.number(),
+    total: zod.number(),
+  }),
+  evening: zod.object({
+    newThisYear: zod.number(),
+    returning: zod.number(),
+    total: zod.number(),
+  }),
+  totalMembers: zod.number(),
+  amountPaid: zod.number(),
+  paypalFee: zod.number(),
+  netDues: zod.number(),
+  yearOverYear: zod.array(
+    zod.object({
+      academicYear: zod.string(),
+      memberCount: zod.number(),
+    }),
+  ),
+});
+
+/**
+ * @summary Email a magic link to a registered club lead
+ */
+export const RequestRosterAccessParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+export const RequestRosterAccessBody = zod.object({
+  email: zod.string().email(),
+});
+
+export const RequestRosterAccessResponse = zod.object({
+  message: zod.string(),
+  magicLink: zod
+    .string()
+    .optional()
+    .describe("Only present in dev when RESEND_API_KEY is not set"),
+});
+
+/**
+ * @summary Token-gated full member roster with renewal forecast
+ */
+export const GetClubRosterParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+export const GetClubRosterQueryParams = zod.object({
+  token: zod.coerce.string().describe("Single-use magic link token"),
+});
+
+export const GetClubRosterResponse = zod.object({
+  club: zod.object({
+    id: zod.string().uuid(),
+    name: zod.string(),
+    slug: zod.string(),
+    description: zod.string().nullable(),
+    calendarId: zod.number().nullable(),
+    pricing: zod.record(zod.string(), zod.number()),
+    isActive: zod.boolean(),
+  }),
+  currentAcademicYear: zod.string(),
+  members: zod.array(
+    zod.object({
+      fullName: zod.string(),
+      email: zod.string(),
+      program: zod.enum(["full_time", "evening"]),
+      classYear: zod.number(),
+      memberships: zod.array(
+        zod.object({
+          termYears: zod.number(),
+          amountPaid: zod.number(),
+          paidAt: zod.coerce.date(),
+          expiresAt: zod.coerce.date(),
+          isActive: zod.boolean(),
+          academicYear: zod.string(),
+        }),
+      ),
+    }),
+  ),
+  renewalForecast: zod.object({
+    expiringThisYear: zod.array(
+      zod.object({
+        fullName: zod.string(),
+        email: zod.string(),
+        expiresAt: zod.coerce.date(),
+      }),
+    ),
+    lapsedLastYear: zod.array(
+      zod.object({
+        fullName: zod.string(),
+        email: zod.string(),
+        lastPaidAcademicYear: zod.string(),
+      }),
+    ),
+  }),
+});
+
+/**
+ * @summary Token-gated CSV export of the full member roster
+ */
+export const DownloadClubRosterCsvParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+export const DownloadClubRosterCsvQueryParams = zod.object({
+  token: zod.coerce
+    .string()
+    .describe("Magic link token (already-used tokens accepted)"),
 });

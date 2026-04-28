@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 export interface HealthStatus {
   status: string;
@@ -11,6 +11,20 @@ export interface HealthStatus {
 
 export interface ErrorResponse {
   error: string;
+}
+
+export type TokenErrorResponseCode =
+  (typeof TokenErrorResponseCode)[keyof typeof TokenErrorResponseCode];
+
+export const TokenErrorResponseCode = {
+  token_invalid: "token_invalid",
+  token_expired: "token_expired",
+  token_used: "token_used",
+} as const;
+
+export interface TokenErrorResponse {
+  error: string;
+  code: TokenErrorResponseCode;
 }
 
 export interface Calendar {
@@ -45,41 +59,6 @@ export interface CalendarBreakdown {
   upcomingCount: number;
 }
 
-export interface Member {
-  id: number;
-  name: string;
-  email: string;
-  graduationYear: number;
-  /** @nullable */
-  track: string | null;
-  /** @nullable */
-  committee: string | null;
-  duesPaid: boolean;
-  /** @nullable */
-  notes: string | null;
-  createdAt: string;
-}
-
-export interface CreateMemberBody {
-  name: string;
-  email: string;
-  graduationYear: number;
-  track?: string;
-  committee?: string;
-  duesPaid?: boolean;
-  notes?: string;
-}
-
-export interface UpdateMemberBody {
-  name?: string;
-  email?: string;
-  graduationYear?: number;
-  track?: string;
-  committee?: string;
-  duesPaid?: boolean;
-  notes?: string;
-}
-
 export interface DashboardSummary {
   totalCalendars: number;
   totalEvents: number;
@@ -87,6 +66,150 @@ export interface DashboardSummary {
   eventsThisWeek: number;
   nextEvent: Event | null;
   breakdown: CalendarBreakdown[];
+}
+
+export interface TopClub {
+  clubId: string;
+  clubName: string;
+  clubSlug: string;
+  memberCount: number;
+}
+
+export interface MembershipSummary {
+  currentAcademicYear: string;
+  totalActiveMembers: number;
+  totalDuesCollected: number;
+  activeClubCount: number;
+  topClubs: TopClub[];
+}
+
+export type MemberProgram = (typeof MemberProgram)[keyof typeof MemberProgram];
+
+export const MemberProgram = {
+  full_time: "full_time",
+  evening: "evening",
+} as const;
+
+export interface Member {
+  id: string;
+  fullName: string;
+  email: string;
+  program: MemberProgram;
+  classYear: number;
+}
+
+export interface MembershipRecord {
+  clubId: string;
+  clubName: string;
+  clubSlug: string;
+  termYears: number;
+  amountPaid: number;
+  paidAt: string;
+  expiresAt: string;
+  isActive: boolean;
+  academicYear: string;
+}
+
+export interface MemberMembershipsResponse {
+  member: Member;
+  memberships: MembershipRecord[];
+}
+
+export type ClubPricing = { [key: string]: number };
+
+export interface Club {
+  id: string;
+  name: string;
+  slug: string;
+  /** @nullable */
+  description: string | null;
+  /** @nullable */
+  calendarId: number | null;
+  pricing: ClubPricing;
+  isActive: boolean;
+}
+
+export interface ProgramBreakdown {
+  newThisYear: number;
+  returning: number;
+  total: number;
+}
+
+export interface YearOverYearEntry {
+  academicYear: string;
+  memberCount: number;
+}
+
+export interface ClubSummary {
+  club: Club;
+  currentAcademicYear: string;
+  priorAcademicYear: string;
+  fullTime: ProgramBreakdown;
+  evening: ProgramBreakdown;
+  totalMembers: number;
+  amountPaid: number;
+  paypalFee: number;
+  netDues: number;
+  yearOverYear: YearOverYearEntry[];
+}
+
+export interface RequestAccessBody {
+  email: string;
+}
+
+export interface RequestAccessResponse {
+  message: string;
+  /** Only present in dev when RESEND_API_KEY is not set */
+  magicLink?: string;
+}
+
+export interface RosterMembership {
+  termYears: number;
+  amountPaid: number;
+  paidAt: string;
+  expiresAt: string;
+  isActive: boolean;
+  academicYear: string;
+}
+
+export type RosterMemberProgram =
+  (typeof RosterMemberProgram)[keyof typeof RosterMemberProgram];
+
+export const RosterMemberProgram = {
+  full_time: "full_time",
+  evening: "evening",
+} as const;
+
+export interface RosterMember {
+  fullName: string;
+  email: string;
+  program: RosterMemberProgram;
+  classYear: number;
+  memberships: RosterMembership[];
+}
+
+export interface ExpiringMember {
+  fullName: string;
+  email: string;
+  expiresAt: string;
+}
+
+export interface LapsedMember {
+  fullName: string;
+  email: string;
+  lastPaidAcademicYear: string;
+}
+
+export interface RenewalForecast {
+  expiringThisYear: ExpiringMember[];
+  lapsedLastYear: LapsedMember[];
+}
+
+export interface ClubRoster {
+  club: Club;
+  currentAcademicYear: string;
+  members: RosterMember[];
+  renewalForecast: RenewalForecast;
 }
 
 export type ListEventsParams = {
@@ -108,7 +231,20 @@ export type ListUpcomingEventsParams = {
   limit?: number;
 };
 
-export type ListMembersParams = {
-  duesPaid?: boolean;
-  track?: string;
+export type SearchMembersParams = {
+  q: string;
+};
+
+export type GetClubRosterParams = {
+  /**
+   * Single-use magic link token
+   */
+  token: string;
+};
+
+export type DownloadClubRosterCsvParams = {
+  /**
+   * Magic link token (already-used tokens accepted)
+   */
+  token: string;
 };

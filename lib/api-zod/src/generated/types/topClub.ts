@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export type ListUpcomingEventsParams = {
-  limit?: number;
-};
+export interface TopClub {
+  clubId: string;
+  clubName: string;
+  clubSlug: string;
+  memberCount: number;
+}

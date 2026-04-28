@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export type ListUpcomingEventsParams = {
-  limit?: number;
-};
+export interface ProgramBreakdown {
+  newThisYear: number;
+  returning: number;
+  total: number;
+}

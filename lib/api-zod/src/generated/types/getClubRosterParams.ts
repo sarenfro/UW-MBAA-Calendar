@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export type ListUpcomingEventsParams = {
-  limit?: number;
+export type GetClubRosterParams = {
+  /**
+   * Single-use magic link token
+   */
+  token: string;
 };

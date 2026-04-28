@@ -6,6 +6,4 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export type ListUpcomingEventsParams = {
-  limit?: number;
-};
+export type ClubPricing = { [key: string]: number };

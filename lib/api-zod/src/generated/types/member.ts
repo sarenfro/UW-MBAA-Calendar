@@ -3,20 +3,14 @@
  * Do not edit manually.
  * Api
  * API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
+import type { MemberProgram } from "./memberProgram";
 
 export interface Member {
-  id: number;
-  name: string;
+  id: string;
+  fullName: string;
   email: string;
-  graduationYear: number;
-  /** @nullable */
-  track: string | null;
-  /** @nullable */
-  committee: string | null;
-  duesPaid: boolean;
-  /** @nullable */
-  notes: string | null;
-  createdAt: Date;
+  program: MemberProgram;
+  classYear: number;
 }

@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
@@ -18,16 +18,24 @@ import type {
 
 import type {
   Calendar,
-  CreateMemberBody,
+  Club,
+  ClubRoster,
+  ClubSummary,
   DashboardSummary,
+  DownloadClubRosterCsvParams,
   ErrorResponse,
   Event,
+  GetClubRosterParams,
   HealthStatus,
   ListEventsParams,
-  ListMembersParams,
   ListUpcomingEventsParams,
   Member,
-  UpdateMemberBody,
+  MemberMembershipsResponse,
+  MembershipSummary,
+  RequestAccessBody,
+  RequestAccessResponse,
+  SearchMembersParams,
+  TokenErrorResponse,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -554,357 +562,6 @@ export function useListUpcomingEvents<
 }
 
 /**
- * @summary List MBAA members
- */
-export const getListMembersUrl = (params?: ListMembersParams) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString());
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0
-    ? `/api/members?${stringifiedParams}`
-    : `/api/members`;
-};
-
-export const listMembers = async (
-  params?: ListMembersParams,
-  options?: RequestInit,
-): Promise<Member[]> => {
-  return customFetch<Member[]>(getListMembersUrl(params), {
-    ...options,
-    method: "GET",
-  });
-};
-
-export const getListMembersQueryKey = (params?: ListMembersParams) => {
-  return [`/api/members`, ...(params ? [params] : [])] as const;
-};
-
-export const getListMembersQueryOptions = <
-  TData = Awaited<ReturnType<typeof listMembers>>,
-  TError = ErrorType<unknown>,
->(
-  params?: ListMembersParams,
-  options?: {
-    query?: UseQueryOptions<
-      Awaited<ReturnType<typeof listMembers>>,
-      TError,
-      TData
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getListMembersQueryKey(params);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof listMembers>>> = ({
-    signal,
-  }) => listMembers(params, { signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof listMembers>>,
-    TError,
-    TData
-  > & { queryKey: QueryKey };
-};
-
-export type ListMembersQueryResult = NonNullable<
-  Awaited<ReturnType<typeof listMembers>>
->;
-export type ListMembersQueryError = ErrorType<unknown>;
-
-/**
- * @summary List MBAA members
- */
-
-export function useListMembers<
-  TData = Awaited<ReturnType<typeof listMembers>>,
-  TError = ErrorType<unknown>,
->(
-  params?: ListMembersParams,
-  options?: {
-    query?: UseQueryOptions<
-      Awaited<ReturnType<typeof listMembers>>,
-      TError,
-      TData
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getListMembersQueryOptions(params, options);
-
-  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
-    queryKey: QueryKey;
-  };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-/**
- * @summary Add a new MBAA member
- */
-export const getCreateMemberUrl = () => {
-  return `/api/members`;
-};
-
-export const createMember = async (
-  createMemberBody: CreateMemberBody,
-  options?: RequestInit,
-): Promise<Member> => {
-  return customFetch<Member>(getCreateMemberUrl(), {
-    ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(createMemberBody),
-  });
-};
-
-export const getCreateMemberMutationOptions = <
-  TError = ErrorType<ErrorResponse>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof createMember>>,
-    TError,
-    { data: BodyType<CreateMemberBody> },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof createMember>>,
-  TError,
-  { data: BodyType<CreateMemberBody> },
-  TContext
-> => {
-  const mutationKey = ["createMember"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof createMember>>,
-    { data: BodyType<CreateMemberBody> }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return createMember(data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type CreateMemberMutationResult = NonNullable<
-  Awaited<ReturnType<typeof createMember>>
->;
-export type CreateMemberMutationBody = BodyType<CreateMemberBody>;
-export type CreateMemberMutationError = ErrorType<ErrorResponse>;
-
-/**
- * @summary Add a new MBAA member
- */
-export const useCreateMember = <
-  TError = ErrorType<ErrorResponse>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof createMember>>,
-    TError,
-    { data: BodyType<CreateMemberBody> },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationResult<
-  Awaited<ReturnType<typeof createMember>>,
-  TError,
-  { data: BodyType<CreateMemberBody> },
-  TContext
-> => {
-  return useMutation(getCreateMemberMutationOptions(options));
-};
-
-/**
- * @summary Update a member record
- */
-export const getUpdateMemberUrl = (id: number) => {
-  return `/api/members/${id}`;
-};
-
-export const updateMember = async (
-  id: number,
-  updateMemberBody: UpdateMemberBody,
-  options?: RequestInit,
-): Promise<Member> => {
-  return customFetch<Member>(getUpdateMemberUrl(id), {
-    ...options,
-    method: "PATCH",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(updateMemberBody),
-  });
-};
-
-export const getUpdateMemberMutationOptions = <
-  TError = ErrorType<ErrorResponse>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof updateMember>>,
-    TError,
-    { id: number; data: BodyType<UpdateMemberBody> },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof updateMember>>,
-  TError,
-  { id: number; data: BodyType<UpdateMemberBody> },
-  TContext
-> => {
-  const mutationKey = ["updateMember"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof updateMember>>,
-    { id: number; data: BodyType<UpdateMemberBody> }
-  > = (props) => {
-    const { id, data } = props ?? {};
-
-    return updateMember(id, data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type UpdateMemberMutationResult = NonNullable<
-  Awaited<ReturnType<typeof updateMember>>
->;
-export type UpdateMemberMutationBody = BodyType<UpdateMemberBody>;
-export type UpdateMemberMutationError = ErrorType<ErrorResponse>;
-
-/**
- * @summary Update a member record
- */
-export const useUpdateMember = <
-  TError = ErrorType<ErrorResponse>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof updateMember>>,
-    TError,
-    { id: number; data: BodyType<UpdateMemberBody> },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationResult<
-  Awaited<ReturnType<typeof updateMember>>,
-  TError,
-  { id: number; data: BodyType<UpdateMemberBody> },
-  TContext
-> => {
-  return useMutation(getUpdateMemberMutationOptions(options));
-};
-
-/**
- * @summary Remove a member
- */
-export const getDeleteMemberUrl = (id: number) => {
-  return `/api/members/${id}`;
-};
-
-export const deleteMember = async (
-  id: number,
-  options?: RequestInit,
-): Promise<void> => {
-  return customFetch<void>(getDeleteMemberUrl(id), {
-    ...options,
-    method: "DELETE",
-  });
-};
-
-export const getDeleteMemberMutationOptions = <
-  TError = ErrorType<ErrorResponse>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof deleteMember>>,
-    TError,
-    { id: number },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof deleteMember>>,
-  TError,
-  { id: number },
-  TContext
-> => {
-  const mutationKey = ["deleteMember"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof deleteMember>>,
-    { id: number }
-  > = (props) => {
-    const { id } = props ?? {};
-
-    return deleteMember(id, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type DeleteMemberMutationResult = NonNullable<
-  Awaited<ReturnType<typeof deleteMember>>
->;
-
-export type DeleteMemberMutationError = ErrorType<ErrorResponse>;
-
-/**
- * @summary Remove a member
- */
-export const useDeleteMember = <
-  TError = ErrorType<ErrorResponse>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof deleteMember>>,
-    TError,
-    { id: number },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationResult<
-  Awaited<ReturnType<typeof deleteMember>>,
-  TError,
-  { id: number },
-  TContext
-> => {
-  return useMutation(getDeleteMemberMutationOptions(options));
-};
-
-/**
  * @summary High-level totals and breakdowns for the dashboard
  */
 export const getGetDashboardSummaryUrl = () => {
@@ -971,6 +628,731 @@ export function useGetDashboardSummary<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetDashboardSummaryQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary MBAA-wide membership stats for the current academic year
+ */
+export const getGetMembershipSummaryUrl = () => {
+  return `/api/dashboard/membership-summary`;
+};
+
+export const getMembershipSummary = async (
+  options?: RequestInit,
+): Promise<MembershipSummary> => {
+  return customFetch<MembershipSummary>(getGetMembershipSummaryUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMembershipSummaryQueryKey = () => {
+  return [`/api/dashboard/membership-summary`] as const;
+};
+
+export const getGetMembershipSummaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMembershipSummary>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMembershipSummary>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMembershipSummaryQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMembershipSummary>>
+  > = ({ signal }) => getMembershipSummary({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMembershipSummary>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMembershipSummaryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMembershipSummary>>
+>;
+export type GetMembershipSummaryQueryError = ErrorType<unknown>;
+
+/**
+ * @summary MBAA-wide membership stats for the current academic year
+ */
+
+export function useGetMembershipSummary<
+  TData = Awaited<ReturnType<typeof getMembershipSummary>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMembershipSummary>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMembershipSummaryQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Search members by name or email (max 20 results)
+ */
+export const getSearchMembersUrl = (params: SearchMembersParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/members/search?${stringifiedParams}`
+    : `/api/members/search`;
+};
+
+export const searchMembers = async (
+  params: SearchMembersParams,
+  options?: RequestInit,
+): Promise<Member[]> => {
+  return customFetch<Member[]>(getSearchMembersUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getSearchMembersQueryKey = (params?: SearchMembersParams) => {
+  return [`/api/members/search`, ...(params ? [params] : [])] as const;
+};
+
+export const getSearchMembersQueryOptions = <
+  TData = Awaited<ReturnType<typeof searchMembers>>,
+  TError = ErrorType<unknown>,
+>(
+  params: SearchMembersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof searchMembers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getSearchMembersQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof searchMembers>>> = ({
+    signal,
+  }) => searchMembers(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof searchMembers>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type SearchMembersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof searchMembers>>
+>;
+export type SearchMembersQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Search members by name or email (max 20 results)
+ */
+
+export function useSearchMembers<
+  TData = Awaited<ReturnType<typeof searchMembers>>,
+  TError = ErrorType<unknown>,
+>(
+  params: SearchMembersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof searchMembers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getSearchMembersQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get a member and all their club memberships
+ */
+export const getGetMemberMembershipsUrl = (id: string) => {
+  return `/api/members/${id}/memberships`;
+};
+
+export const getMemberMemberships = async (
+  id: string,
+  options?: RequestInit,
+): Promise<MemberMembershipsResponse> => {
+  return customFetch<MemberMembershipsResponse>(
+    getGetMemberMembershipsUrl(id),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetMemberMembershipsQueryKey = (id: string) => {
+  return [`/api/members/${id}/memberships`] as const;
+};
+
+export const getGetMemberMembershipsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMemberMemberships>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMemberMemberships>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetMemberMembershipsQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMemberMemberships>>
+  > = ({ signal }) => getMemberMemberships(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMemberMemberships>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMemberMembershipsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMemberMemberships>>
+>;
+export type GetMemberMembershipsQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get a member and all their club memberships
+ */
+
+export function useGetMemberMemberships<
+  TData = Awaited<ReturnType<typeof getMemberMemberships>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMemberMemberships>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMemberMembershipsQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List all active clubs
+ */
+export const getListClubsUrl = () => {
+  return `/api/clubs`;
+};
+
+export const listClubs = async (options?: RequestInit): Promise<Club[]> => {
+  return customFetch<Club[]>(getListClubsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListClubsQueryKey = () => {
+  return [`/api/clubs`] as const;
+};
+
+export const getListClubsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listClubs>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof listClubs>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListClubsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listClubs>>> = ({
+    signal,
+  }) => listClubs({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listClubs>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListClubsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listClubs>>
+>;
+export type ListClubsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all active clubs
+ */
+
+export function useListClubs<
+  TData = Awaited<ReturnType<typeof listClubs>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof listClubs>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListClubsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary New/returning breakdown, dues totals, and year-over-year for a club
+ */
+export const getGetClubSummaryUrl = (slug: string) => {
+  return `/api/clubs/${slug}/summary`;
+};
+
+export const getClubSummary = async (
+  slug: string,
+  options?: RequestInit,
+): Promise<ClubSummary> => {
+  return customFetch<ClubSummary>(getGetClubSummaryUrl(slug), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetClubSummaryQueryKey = (slug: string) => {
+  return [`/api/clubs/${slug}/summary`] as const;
+};
+
+export const getGetClubSummaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getClubSummary>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  slug: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getClubSummary>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetClubSummaryQueryKey(slug);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getClubSummary>>> = ({
+    signal,
+  }) => getClubSummary(slug, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!slug,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getClubSummary>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetClubSummaryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getClubSummary>>
+>;
+export type GetClubSummaryQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary New/returning breakdown, dues totals, and year-over-year for a club
+ */
+
+export function useGetClubSummary<
+  TData = Awaited<ReturnType<typeof getClubSummary>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  slug: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getClubSummary>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetClubSummaryQueryOptions(slug, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Email a magic link to a registered club lead
+ */
+export const getRequestRosterAccessUrl = (slug: string) => {
+  return `/api/clubs/${slug}/request-access`;
+};
+
+export const requestRosterAccess = async (
+  slug: string,
+  requestAccessBody: RequestAccessBody,
+  options?: RequestInit,
+): Promise<RequestAccessResponse> => {
+  return customFetch<RequestAccessResponse>(getRequestRosterAccessUrl(slug), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(requestAccessBody),
+  });
+};
+
+export const getRequestRosterAccessMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestRosterAccess>>,
+    TError,
+    { slug: string; data: BodyType<RequestAccessBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof requestRosterAccess>>,
+  TError,
+  { slug: string; data: BodyType<RequestAccessBody> },
+  TContext
+> => {
+  const mutationKey = ["requestRosterAccess"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof requestRosterAccess>>,
+    { slug: string; data: BodyType<RequestAccessBody> }
+  > = (props) => {
+    const { slug, data } = props ?? {};
+
+    return requestRosterAccess(slug, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RequestRosterAccessMutationResult = NonNullable<
+  Awaited<ReturnType<typeof requestRosterAccess>>
+>;
+export type RequestRosterAccessMutationBody = BodyType<RequestAccessBody>;
+export type RequestRosterAccessMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Email a magic link to a registered club lead
+ */
+export const useRequestRosterAccess = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestRosterAccess>>,
+    TError,
+    { slug: string; data: BodyType<RequestAccessBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof requestRosterAccess>>,
+  TError,
+  { slug: string; data: BodyType<RequestAccessBody> },
+  TContext
+> => {
+  return useMutation(getRequestRosterAccessMutationOptions(options));
+};
+
+/**
+ * @summary Token-gated full member roster with renewal forecast
+ */
+export const getGetClubRosterUrl = (
+  slug: string,
+  params: GetClubRosterParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/clubs/${slug}/roster?${stringifiedParams}`
+    : `/api/clubs/${slug}/roster`;
+};
+
+export const getClubRoster = async (
+  slug: string,
+  params: GetClubRosterParams,
+  options?: RequestInit,
+): Promise<ClubRoster> => {
+  return customFetch<ClubRoster>(getGetClubRosterUrl(slug, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetClubRosterQueryKey = (
+  slug: string,
+  params?: GetClubRosterParams,
+) => {
+  return [`/api/clubs/${slug}/roster`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetClubRosterQueryOptions = <
+  TData = Awaited<ReturnType<typeof getClubRoster>>,
+  TError = ErrorType<TokenErrorResponse>,
+>(
+  slug: string,
+  params: GetClubRosterParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getClubRoster>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetClubRosterQueryKey(slug, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getClubRoster>>> = ({
+    signal,
+  }) => getClubRoster(slug, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!slug,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getClubRoster>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetClubRosterQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getClubRoster>>
+>;
+export type GetClubRosterQueryError = ErrorType<TokenErrorResponse>;
+
+/**
+ * @summary Token-gated full member roster with renewal forecast
+ */
+
+export function useGetClubRoster<
+  TData = Awaited<ReturnType<typeof getClubRoster>>,
+  TError = ErrorType<TokenErrorResponse>,
+>(
+  slug: string,
+  params: GetClubRosterParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getClubRoster>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetClubRosterQueryOptions(slug, params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Token-gated CSV export of the full member roster
+ */
+export const getDownloadClubRosterCsvUrl = (
+  slug: string,
+  params: DownloadClubRosterCsvParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/clubs/${slug}/roster.csv?${stringifiedParams}`
+    : `/api/clubs/${slug}/roster.csv`;
+};
+
+export const downloadClubRosterCsv = async (
+  slug: string,
+  params: DownloadClubRosterCsvParams,
+  options?: RequestInit,
+): Promise<string> => {
+  return customFetch<string>(getDownloadClubRosterCsvUrl(slug, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getDownloadClubRosterCsvQueryKey = (
+  slug: string,
+  params?: DownloadClubRosterCsvParams,
+) => {
+  return [
+    `/api/clubs/${slug}/roster.csv`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getDownloadClubRosterCsvQueryOptions = <
+  TData = Awaited<ReturnType<typeof downloadClubRosterCsv>>,
+  TError = ErrorType<TokenErrorResponse>,
+>(
+  slug: string,
+  params: DownloadClubRosterCsvParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof downloadClubRosterCsv>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getDownloadClubRosterCsvQueryKey(slug, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof downloadClubRosterCsv>>
+  > = ({ signal }) =>
+    downloadClubRosterCsv(slug, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!slug,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof downloadClubRosterCsv>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type DownloadClubRosterCsvQueryResult = NonNullable<
+  Awaited<ReturnType<typeof downloadClubRosterCsv>>
+>;
+export type DownloadClubRosterCsvQueryError = ErrorType<TokenErrorResponse>;
+
+/**
+ * @summary Token-gated CSV export of the full member roster
+ */
+
+export function useDownloadClubRosterCsv<
+  TData = Awaited<ReturnType<typeof downloadClubRosterCsv>>,
+  TError = ErrorType<TokenErrorResponse>,
+>(
+  slug: string,
+  params: DownloadClubRosterCsvParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof downloadClubRosterCsv>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getDownloadClubRosterCsvQueryOptions(
+    slug,
+    params,
+    options,
+  );
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

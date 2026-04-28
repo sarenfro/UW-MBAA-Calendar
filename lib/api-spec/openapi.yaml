@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.1.0
+  version: 0.2.0
   description: API specification
 servers:
   - url: /api
@@ -17,7 +17,9 @@ tags:
   - name: dashboard
     description: Dashboard summary operations
   - name: members
-    description: MBAA membership operations
+    description: MBAA member lookup operations
+  - name: clubs
+    description: Club roster and dues operations
 paths:
   /healthz:
     get:
@@ -152,105 +154,6 @@ paths:
                 items:
                   $ref: "#/components/schemas/Event"
 
-  /members:
-    get:
-      operationId: listMembers
-      tags: [members]
-      summary: List MBAA members
-      parameters:
-        - in: query
-          name: duesPaid
-          required: false
-          schema:
-            type: boolean
-        - in: query
-          name: track
-          required: false
-          schema:
-            type: string
-      responses:
-        "200":
-          description: List of members
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Member"
-    post:
-      operationId: createMember
-      tags: [members]
-      summary: Add a new MBAA member
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateMemberBody"
-      responses:
-        "201":
-          description: Created member
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Member"
-        "409":
-          description: Email already exists
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /members/{id}:
-    patch:
-      operationId: updateMember
-      tags: [members]
-      summary: Update a member record
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateMemberBody"
-      responses:
-        "200":
-          description: Updated member
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Member"
-        "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    delete:
-      operationId: deleteMember
-      tags: [members]
-      summary: Remove a member
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "204":
-          description: Deleted
-        "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
   /dashboard/summary:
     get:
       operationId: getDashboardSummary
@@ -263,6 +166,212 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/membership-summary:
+    get:
+      operationId: getMembershipSummary
+      tags: [dashboard]
+      summary: MBAA-wide membership stats for the current academic year
+      responses:
+        "200":
+          description: Membership summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MembershipSummary"
+
+  /members/search:
+    get:
+      operationId: searchMembers
+      tags: [members]
+      summary: Search members by name or email (max 20 results)
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Matching members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Member"
+
+  /members/{id}/memberships:
+    get:
+      operationId: getMemberMemberships
+      tags: [members]
+      summary: Get a member and all their club memberships
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Member UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Member with memberships
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberMembershipsResponse"
+        "400":
+          description: Invalid member id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Member not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clubs:
+    get:
+      operationId: listClubs
+      tags: [clubs]
+      summary: List all active clubs
+      responses:
+        "200":
+          description: Active clubs ordered by name
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Club"
+
+  /clubs/{slug}/summary:
+    get:
+      operationId: getClubSummary
+      tags: [clubs]
+      summary: New/returning breakdown, dues totals, and year-over-year for a club
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Club summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubSummary"
+        "404":
+          description: Club not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clubs/{slug}/request-access:
+    post:
+      operationId: requestRosterAccess
+      tags: [clubs]
+      summary: Email a magic link to a registered club lead
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestAccessBody"
+      responses:
+        "200":
+          description: Generic success (response is the same whether or not the email matched)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestAccessResponse"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Club not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clubs/{slug}/roster:
+    get:
+      operationId: getClubRoster
+      tags: [clubs]
+      summary: Token-gated full member roster with renewal forecast
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          required: true
+          description: Single-use magic link token
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Club roster
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubRoster"
+        "403":
+          description: Token invalid, expired, or already used
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenErrorResponse"
+
+  /clubs/{slug}/roster.csv:
+    get:
+      operationId: downloadClubRosterCsv
+      tags: [clubs]
+      summary: Token-gated CSV export of the full member roster
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: token
+          required: true
+          description: Magic link token (already-used tokens accepted)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: CSV file download
+          content:
+            text/csv:
+              schema:
+                type: string
+        "403":
+          description: Token invalid or expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenErrorResponse"
 
 components:
   schemas:
@@ -281,6 +390,18 @@ components:
           type: string
       required:
         - error
+
+    TokenErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+          enum: [token_invalid, token_expired, token_used]
+      required:
+        - error
+        - code
 
     Calendar:
       type: object
@@ -355,79 +476,6 @@ components:
         - eventCount
         - upcomingCount
 
-    Member:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        email:
-          type: string
-        graduationYear:
-          type: integer
-        track:
-          type: ["string", "null"]
-        committee:
-          type: ["string", "null"]
-        duesPaid:
-          type: boolean
-        notes:
-          type: ["string", "null"]
-        createdAt:
-          type: string
-          format: date-time
-      required:
-        - id
-        - name
-        - email
-        - graduationYear
-        - track
-        - committee
-        - duesPaid
-        - notes
-        - createdAt
-
-    CreateMemberBody:
-      type: object
-      properties:
-        name:
-          type: string
-        email:
-          type: string
-        graduationYear:
-          type: integer
-        track:
-          type: string
-        committee:
-          type: string
-        duesPaid:
-          type: boolean
-        notes:
-          type: string
-      required:
-        - name
-        - email
-        - graduationYear
-
-    UpdateMemberBody:
-      type: object
-      properties:
-        name:
-          type: string
-        email:
-          type: string
-        graduationYear:
-          type: integer
-        track:
-          type: string
-        committee:
-          type: string
-        duesPaid:
-          type: boolean
-        notes:
-          type: string
-
     DashboardSummary:
       type: object
       properties:
@@ -454,3 +502,335 @@ components:
         - eventsThisWeek
         - nextEvent
         - breakdown
+
+    TopClub:
+      type: object
+      properties:
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        clubSlug:
+          type: string
+        memberCount:
+          type: integer
+      required:
+        - clubId
+        - clubName
+        - clubSlug
+        - memberCount
+
+    MembershipSummary:
+      type: object
+      properties:
+        currentAcademicYear:
+          type: string
+        totalActiveMembers:
+          type: integer
+        totalDuesCollected:
+          type: number
+        activeClubCount:
+          type: integer
+        topClubs:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopClub"
+      required:
+        - currentAcademicYear
+        - totalActiveMembers
+        - totalDuesCollected
+        - activeClubCount
+        - topClubs
+
+    Member:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        email:
+          type: string
+        program:
+          type: string
+          enum: [full_time, evening]
+        classYear:
+          type: integer
+      required:
+        - id
+        - fullName
+        - email
+        - program
+        - classYear
+
+    MembershipRecord:
+      type: object
+      properties:
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        clubSlug:
+          type: string
+        termYears:
+          type: integer
+        amountPaid:
+          type: number
+        paidAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        isActive:
+          type: boolean
+        academicYear:
+          type: string
+      required:
+        - clubId
+        - clubName
+        - clubSlug
+        - termYears
+        - amountPaid
+        - paidAt
+        - expiresAt
+        - isActive
+        - academicYear
+
+    MemberMembershipsResponse:
+      type: object
+      properties:
+        member:
+          $ref: "#/components/schemas/Member"
+        memberships:
+          type: array
+          items:
+            $ref: "#/components/schemas/MembershipRecord"
+      required:
+        - member
+        - memberships
+
+    Club:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: ["string", "null"]
+        calendarId:
+          type: ["integer", "null"]
+        pricing:
+          type: object
+          additionalProperties:
+            type: number
+        isActive:
+          type: boolean
+      required:
+        - id
+        - name
+        - slug
+        - description
+        - calendarId
+        - pricing
+        - isActive
+
+    ProgramBreakdown:
+      type: object
+      properties:
+        newThisYear:
+          type: integer
+        returning:
+          type: integer
+        total:
+          type: integer
+      required:
+        - newThisYear
+        - returning
+        - total
+
+    YearOverYearEntry:
+      type: object
+      properties:
+        academicYear:
+          type: string
+        memberCount:
+          type: integer
+      required:
+        - academicYear
+        - memberCount
+
+    ClubSummary:
+      type: object
+      properties:
+        club:
+          $ref: "#/components/schemas/Club"
+        currentAcademicYear:
+          type: string
+        priorAcademicYear:
+          type: string
+        fullTime:
+          $ref: "#/components/schemas/ProgramBreakdown"
+        evening:
+          $ref: "#/components/schemas/ProgramBreakdown"
+        totalMembers:
+          type: integer
+        amountPaid:
+          type: number
+        paypalFee:
+          type: number
+        netDues:
+          type: number
+        yearOverYear:
+          type: array
+          items:
+            $ref: "#/components/schemas/YearOverYearEntry"
+      required:
+        - club
+        - currentAcademicYear
+        - priorAcademicYear
+        - fullTime
+        - evening
+        - totalMembers
+        - amountPaid
+        - paypalFee
+        - netDues
+        - yearOverYear
+
+    RequestAccessBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+        - email
+
+    RequestAccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        magicLink:
+          type: string
+          description: Only present in dev when RESEND_API_KEY is not set
+      required:
+        - message
+
+    RosterMembership:
+      type: object
+      properties:
+        termYears:
+          type: integer
+        amountPaid:
+          type: number
+        paidAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        isActive:
+          type: boolean
+        academicYear:
+          type: string
+      required:
+        - termYears
+        - amountPaid
+        - paidAt
+        - expiresAt
+        - isActive
+        - academicYear
+
+    RosterMember:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+        program:
+          type: string
+          enum: [full_time, evening]
+        classYear:
+          type: integer
+        memberships:
+          type: array
+          items:
+            $ref: "#/components/schemas/RosterMembership"
+      required:
+        - fullName
+        - email
+        - program
+        - classYear
+        - memberships
+
+    ExpiringMember:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+      required:
+        - fullName
+        - email
+        - expiresAt
+
+    LapsedMember:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+        lastPaidAcademicYear:
+          type: string
+      required:
+        - fullName
+        - email
+        - lastPaidAcademicYear
+
+    RenewalForecast:
+      type: object
+      properties:
+        expiringThisYear:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExpiringMember"
+        lapsedLastYear:
+          type: array
+          items:
+            $ref: "#/components/schemas/LapsedMember"
+      required:
+        - expiringThisYear
+        - lapsedLastYear
+
+    ClubRoster:
+      type: object
+      properties:
+        club:
+          $ref: "#/components/schemas/Club"
+        currentAcademicYear:
+          type: string
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/RosterMember"
+        renewalForecast:
+          $ref: "#/components/schemas/RenewalForecast"
+      required:
+        - club
+        - currentAcademicYear
+        - members
+        - renewalForecast

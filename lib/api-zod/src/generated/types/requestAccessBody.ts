@@ -6,6 +6,6 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export type ListUpcomingEventsParams = {
-  limit?: number;
-};
+export interface RequestAccessBody {
+  email: string;
+}

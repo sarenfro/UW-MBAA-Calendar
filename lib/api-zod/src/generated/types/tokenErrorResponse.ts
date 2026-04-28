@@ -5,7 +5,9 @@
  * API specification
  * OpenAPI spec version: 0.2.0
  */
+import type { TokenErrorResponseCode } from "./tokenErrorResponseCode";
 
-export interface ErrorResponse {
+export interface TokenErrorResponse {
   error: string;
+  code: TokenErrorResponseCode;
 }
