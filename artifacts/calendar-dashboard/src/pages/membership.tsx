@@ -42,6 +42,7 @@ import {
   getGetClubSummaryQueryKey,
   useRequestRosterAccess,
   useGetClubRoster,
+  getGetClubRosterQueryKey,
 } from "@workspace/api-client-react";
 import type { Club, TokenErrorResponse } from "@workspace/api-client-react";
 
@@ -625,8 +626,13 @@ function RequestAccessForm({ clubs }: { clubs: Club[] }) {
 }
 
 function RosterView({ slug, token }: { slug: string; token: string }) {
-  const { data, isLoading, isError, error } = useGetClubRoster(slug, {
-    token,
+  const { data, isLoading, isError, error } = useGetClubRoster(slug, { token }, {
+    query: {
+      queryKey: getGetClubRosterQueryKey(slug, { token }),
+      staleTime: Infinity,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    },
   });
 
   if (isLoading) {
