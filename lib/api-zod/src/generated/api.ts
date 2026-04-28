@@ -342,6 +342,41 @@ export const RequestRosterAccessResponse = zod.object({
 });
 
 /**
+ * @summary List all registered leads for a club
+ */
+export const ListClubLeadsParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+export const ListClubLeadsResponseItem = zod.object({
+  leadId: zod.string().uuid(),
+  memberId: zod.string().uuid(),
+  fullName: zod.string(),
+  email: zod.string(),
+  addedAt: zod.coerce.date(),
+});
+export const ListClubLeadsResponse = zod.array(ListClubLeadsResponseItem);
+
+/**
+ * @summary Add a member as a lead for a club (by email)
+ */
+export const AddClubLeadParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+export const AddClubLeadBody = zod.object({
+  email: zod.string().email(),
+});
+
+/**
+ * @summary Remove a lead from a club
+ */
+export const RemoveClubLeadParams = zod.object({
+  slug: zod.coerce.string(),
+  leadId: zod.coerce.string().uuid(),
+});
+
+/**
  * @summary Token-gated full member roster with renewal forecast
  */
 export const GetClubRosterParams = zod.object({

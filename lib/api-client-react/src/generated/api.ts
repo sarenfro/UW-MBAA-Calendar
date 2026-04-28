@@ -17,8 +17,10 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AddClubLeadBody,
   Calendar,
   Club,
+  ClubLead,
   ClubRoster,
   ClubSummary,
   DashboardSummary,
@@ -1133,6 +1135,265 @@ export const useRequestRosterAccess = <
   TContext
 > => {
   return useMutation(getRequestRosterAccessMutationOptions(options));
+};
+
+/**
+ * @summary List all registered leads for a club
+ */
+export const getListClubLeadsUrl = (slug: string) => {
+  return `/api/clubs/${slug}/leads`;
+};
+
+export const listClubLeads = async (
+  slug: string,
+  options?: RequestInit,
+): Promise<ClubLead[]> => {
+  return customFetch<ClubLead[]>(getListClubLeadsUrl(slug), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListClubLeadsQueryKey = (slug: string) => {
+  return [`/api/clubs/${slug}/leads`] as const;
+};
+
+export const getListClubLeadsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listClubLeads>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  slug: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listClubLeads>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListClubLeadsQueryKey(slug);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listClubLeads>>> = ({
+    signal,
+  }) => listClubLeads(slug, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!slug,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listClubLeads>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListClubLeadsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listClubLeads>>
+>;
+export type ListClubLeadsQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary List all registered leads for a club
+ */
+
+export function useListClubLeads<
+  TData = Awaited<ReturnType<typeof listClubLeads>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  slug: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listClubLeads>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListClubLeadsQueryOptions(slug, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Add a member as a lead for a club (by email)
+ */
+export const getAddClubLeadUrl = (slug: string) => {
+  return `/api/clubs/${slug}/leads`;
+};
+
+export const addClubLead = async (
+  slug: string,
+  addClubLeadBody: AddClubLeadBody,
+  options?: RequestInit,
+): Promise<ClubLead> => {
+  return customFetch<ClubLead>(getAddClubLeadUrl(slug), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(addClubLeadBody),
+  });
+};
+
+export const getAddClubLeadMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addClubLead>>,
+    TError,
+    { slug: string; data: BodyType<AddClubLeadBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addClubLead>>,
+  TError,
+  { slug: string; data: BodyType<AddClubLeadBody> },
+  TContext
+> => {
+  const mutationKey = ["addClubLead"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addClubLead>>,
+    { slug: string; data: BodyType<AddClubLeadBody> }
+  > = (props) => {
+    const { slug, data } = props ?? {};
+
+    return addClubLead(slug, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AddClubLeadMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addClubLead>>
+>;
+export type AddClubLeadMutationBody = BodyType<AddClubLeadBody>;
+export type AddClubLeadMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Add a member as a lead for a club (by email)
+ */
+export const useAddClubLead = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addClubLead>>,
+    TError,
+    { slug: string; data: BodyType<AddClubLeadBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof addClubLead>>,
+  TError,
+  { slug: string; data: BodyType<AddClubLeadBody> },
+  TContext
+> => {
+  return useMutation(getAddClubLeadMutationOptions(options));
+};
+
+/**
+ * @summary Remove a lead from a club
+ */
+export const getRemoveClubLeadUrl = (slug: string, leadId: string) => {
+  return `/api/clubs/${slug}/leads/${leadId}`;
+};
+
+export const removeClubLead = async (
+  slug: string,
+  leadId: string,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getRemoveClubLeadUrl(slug, leadId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getRemoveClubLeadMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removeClubLead>>,
+    TError,
+    { slug: string; leadId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof removeClubLead>>,
+  TError,
+  { slug: string; leadId: string },
+  TContext
+> => {
+  const mutationKey = ["removeClubLead"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof removeClubLead>>,
+    { slug: string; leadId: string }
+  > = (props) => {
+    const { slug, leadId } = props ?? {};
+
+    return removeClubLead(slug, leadId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RemoveClubLeadMutationResult = NonNullable<
+  Awaited<ReturnType<typeof removeClubLead>>
+>;
+
+export type RemoveClubLeadMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Remove a lead from a club
+ */
+export const useRemoveClubLead = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removeClubLead>>,
+    TError,
+    { slug: string; leadId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof removeClubLead>>,
+  TError,
+  { slug: string; leadId: string },
+  TContext
+> => {
+  return useMutation(getRemoveClubLeadMutationOptions(options));
 };
 
 /**

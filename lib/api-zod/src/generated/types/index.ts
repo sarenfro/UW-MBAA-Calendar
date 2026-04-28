@@ -6,9 +6,11 @@
  * OpenAPI spec version: 0.2.0
  */
 
+export * from "./addClubLeadBody";
 export * from "./calendar";
 export * from "./calendarBreakdown";
 export * from "./club";
+export * from "./clubLead";
 export * from "./clubPricing";
 export * from "./clubRoster";
 export * from "./clubSummary";

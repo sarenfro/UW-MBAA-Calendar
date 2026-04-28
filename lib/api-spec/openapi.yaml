@@ -311,6 +311,101 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /clubs/{slug}/leads:
+    get:
+      operationId: listClubLeads
+      tags: [clubs]
+      summary: List all registered leads for a club
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of club leads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClubLead"
+        "404":
+          description: Club not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: addClubLead
+      tags: [clubs]
+      summary: Add a member as a lead for a club (by email)
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddClubLeadBody"
+      responses:
+        "201":
+          description: Lead added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubLead"
+        "400":
+          description: Invalid body or member not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Club not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Member is already a lead for this club
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clubs/{slug}/leads/{leadId}:
+    delete:
+      operationId: removeClubLead
+      tags: [clubs]
+      summary: Remove a lead from a club
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: leadId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Lead removed
+        "404":
+          description: Club or lead not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /clubs/{slug}/roster:
     get:
       operationId: getClubRoster
@@ -834,3 +929,35 @@ components:
         - currentAcademicYear
         - members
         - renewalForecast
+
+    ClubLead:
+      type: object
+      properties:
+        leadId:
+          type: string
+          format: uuid
+        memberId:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        email:
+          type: string
+        addedAt:
+          type: string
+          format: date-time
+      required:
+        - leadId
+        - memberId
+        - fullName
+        - email
+        - addedAt
+
+    AddClubLeadBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+        - email

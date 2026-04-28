@@ -834,16 +834,27 @@ export default function Membership() {
 
   return (
     <Layout>
-      <Button
-        variant="ghost"
-        asChild
-        className="mb-10 -ml-3 text-muted-foreground hover:text-primary text-xs font-semibold tracking-[0.18em] uppercase"
-      >
-        <Link href="/">
-          <ArrowLeft className="mr-2 h-3.5 w-3.5" />
-          Back to Calendar
-        </Link>
-      </Button>
+      <div className="flex items-center justify-between mb-10">
+        <Button
+          variant="ghost"
+          asChild
+          className="-ml-3 text-muted-foreground hover:text-primary text-xs font-semibold tracking-[0.18em] uppercase"
+        >
+          <Link href="/">
+            <ArrowLeft className="mr-2 h-3.5 w-3.5" />
+            Back to Calendar
+          </Link>
+        </Button>
+        <Button
+          variant="ghost"
+          asChild
+          className="text-muted-foreground hover:text-primary text-xs font-semibold tracking-[0.18em] uppercase"
+        >
+          <Link href="/admin">
+            Manage Leads
+          </Link>
+        </Button>
+      </div>
 
       <section className="max-w-4xl mb-12">
         <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-primary mb-4">

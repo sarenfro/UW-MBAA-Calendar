@@ -237,6 +237,135 @@ router.get("/clubs/:slug/summary", async (req, res): Promise<void> => {
 });
 
 // ---------------------------------------------------------------------------
+// GET /api/clubs/:slug/leads
+// ---------------------------------------------------------------------------
+router.get("/clubs/:slug/leads", async (req, res): Promise<void> => {
+  const { slug } = req.params;
+
+  const [club] = await db
+    .select()
+    .from(clubsTable)
+    .where(eq(clubsTable.slug, slug));
+
+  if (!club) {
+    res.status(404).json({ error: "Club not found" });
+    return;
+  }
+
+  const leads = await db
+    .select({
+      leadId: clubLeadsTable.id,
+      memberId: clubLeadsTable.memberId,
+      fullName: membersTable.fullName,
+      email: membersTable.email,
+      addedAt: clubLeadsTable.createdAt,
+    })
+    .from(clubLeadsTable)
+    .innerJoin(membersTable, eq(clubLeadsTable.memberId, membersTable.id))
+    .where(eq(clubLeadsTable.clubId, club.id))
+    .orderBy(asc(membersTable.fullName));
+
+  res.json(leads);
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/clubs/:slug/leads
+// ---------------------------------------------------------------------------
+router.post("/clubs/:slug/leads", async (req, res): Promise<void> => {
+  const { slug } = req.params;
+
+  const body = z.object({ email: z.string().email() }).safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: "A valid email address is required" });
+    return;
+  }
+
+  const [club] = await db
+    .select()
+    .from(clubsTable)
+    .where(eq(clubsTable.slug, slug));
+
+  if (!club) {
+    res.status(404).json({ error: "Club not found" });
+    return;
+  }
+
+  const [member] = await db
+    .select()
+    .from(membersTable)
+    .where(eq(membersTable.email, body.data.email));
+
+  if (!member) {
+    res.status(400).json({ error: `No member found with email ${body.data.email}` });
+    return;
+  }
+
+  const [existing] = await db
+    .select({ id: clubLeadsTable.id })
+    .from(clubLeadsTable)
+    .where(
+      and(
+        eq(clubLeadsTable.clubId, club.id),
+        eq(clubLeadsTable.memberId, member.id),
+      ),
+    );
+
+  if (existing) {
+    res.status(409).json({ error: "This member is already a lead for this club" });
+    return;
+  }
+
+  const [newLead] = await db
+    .insert(clubLeadsTable)
+    .values({ clubId: club.id, memberId: member.id })
+    .returning();
+
+  res.status(201).json({
+    leadId: newLead.id,
+    memberId: member.id,
+    fullName: member.fullName,
+    email: member.email,
+    addedAt: newLead.createdAt,
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DELETE /api/clubs/:slug/leads/:leadId
+// ---------------------------------------------------------------------------
+router.delete("/clubs/:slug/leads/:leadId", async (req, res): Promise<void> => {
+  const { slug, leadId } = req.params;
+
+  const [club] = await db
+    .select()
+    .from(clubsTable)
+    .where(eq(clubsTable.slug, slug));
+
+  if (!club) {
+    res.status(404).json({ error: "Club not found" });
+    return;
+  }
+
+  const [lead] = await db
+    .select({ id: clubLeadsTable.id })
+    .from(clubLeadsTable)
+    .where(
+      and(
+        eq(clubLeadsTable.id, leadId),
+        eq(clubLeadsTable.clubId, club.id),
+      ),
+    );
+
+  if (!lead) {
+    res.status(404).json({ error: "Lead not found" });
+    return;
+  }
+
+  await db.delete(clubLeadsTable).where(eq(clubLeadsTable.id, leadId));
+
+  res.status(204).send();
+});
+
+// ---------------------------------------------------------------------------
 // POST /api/clubs/:slug/request-access
 // If RESEND_API_KEY is not set, the magic link is returned in the response
 // body under the key "magicLink" (dev fallback). In production, only the

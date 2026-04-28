@@ -212,6 +212,18 @@ export interface ClubRoster {
   renewalForecast: RenewalForecast;
 }
 
+export interface ClubLead {
+  leadId: string;
+  memberId: string;
+  fullName: string;
+  email: string;
+  addedAt: string;
+}
+
+export interface AddClubLeadBody {
+  email: string;
+}
+
 export type ListEventsParams = {
   /**
    * ISO 8601 inclusive lower bound
