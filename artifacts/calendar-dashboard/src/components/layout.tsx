@@ -10,7 +10,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
               <CalendarIcon className="h-4 w-4" />
             </div>
-            <span className="font-serif text-2xl tracking-tight leading-none pt-1">Curator</span>
+            <span className="font-serif text-2xl tracking-tight leading-none pt-1">UW MBAA Calendar</span>
           </Link>
           <div className="text-sm font-medium text-muted-foreground tracking-wide uppercase">
             Unified Calendar

@@ -2,12 +2,11 @@ import { useState } from "react";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { Layout } from "@/components/layout";
 import { CalendarSidebar } from "@/components/calendar-sidebar";
-import { DashboardSummaryStats } from "@/components/dashboard-summary";
 import { UpcomingEvents } from "@/components/upcoming-events";
 import { CalendarGrid } from "@/components/calendar-grid";
 import { EventDialog } from "@/components/event-dialog";
 import { useCalendarFilters } from "@/hooks/use-calendar";
-import { useListEvents, useListUpcomingEvents, useGetDashboardSummary, getListEventsQueryKey } from "@workspace/api-client-react";
+import { useListEvents, useListUpcomingEvents, getListEventsQueryKey } from "@workspace/api-client-react";
 import type { Event } from "@workspace/api-client-react";
 
 export default function Home() {
@@ -24,7 +23,6 @@ export default function Home() {
     visibleCalendarIdsString 
   } = useCalendarFilters();
 
-  const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary();
   const { data: upcomingEvents, isLoading: isLoadingUpcoming } = useListUpcomingEvents({ limit: 5 });
   
   const eventsParams = {
@@ -63,8 +61,6 @@ export default function Home() {
 
         {/* Main Content */}
         <div className="lg:col-span-9 flex flex-col h-[calc(100vh-8rem)]">
-          <DashboardSummaryStats summary={summary} isLoading={isLoadingSummary} />
-          
           <div className="flex-1 min-h-[600px]">
             {isLoadingEvents ? (
               <div className="w-full h-full bg-card animate-pulse rounded-2xl border border-border/40" />
