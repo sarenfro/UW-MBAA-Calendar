@@ -10,6 +10,12 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: calendars
+    description: Calendar source operations
+  - name: events
+    description: Event operations
+  - name: dashboard
+    description: Dashboard summary operations
 paths:
   /healthz:
     get:
@@ -24,6 +30,139 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /calendars:
+    get:
+      operationId: listCalendars
+      tags: [calendars]
+      summary: List all calendar sources
+      responses:
+        "200":
+          description: List of calendars
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Calendar"
+
+  /events:
+    get:
+      operationId: listEvents
+      tags: [events]
+      summary: List events in a date range, optionally filtered by calendar
+      parameters:
+        - in: query
+          name: start
+          required: true
+          description: ISO 8601 inclusive lower bound
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: end
+          required: true
+          description: ISO 8601 exclusive upper bound
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: calendarIds
+          required: false
+          description: Comma-separated calendar ids to include. Omit to include all.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of events with calendar metadata embedded
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+
+  /events/{id}:
+    get:
+      operationId: getEvent
+      tags: [events]
+      summary: Get a single event
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Event with calendar metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /events/{id}/ics:
+    get:
+      operationId: downloadEventIcs
+      tags: [events]
+      summary: Download an .ics file for the event
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: ICS calendar file
+          content:
+            text/calendar:
+              schema:
+                type: string
+        "404":
+          description: Not found
+
+  /events/upcoming:
+    get:
+      operationId: listUpcomingEvents
+      tags: [events]
+      summary: Next upcoming events across every calendar
+      parameters:
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            default: 8
+      responses:
+        "200":
+          description: Upcoming events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: High-level totals and breakdowns for the dashboard
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +173,110 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    Calendar:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        color:
+          type: string
+          description: Hex color (e.g. "#7c3aed") used to tint events from this calendar
+        timezone:
+          type: string
+        owner:
+          type: string
+          description: Display name of the calendar owner / source
+      required:
+        - id
+        - name
+        - description
+        - color
+        - timezone
+        - owner
+
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+        calendarId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        allDay:
+          type: boolean
+        calendar:
+          $ref: "#/components/schemas/Calendar"
+      required:
+        - id
+        - calendarId
+        - title
+        - description
+        - location
+        - startAt
+        - endAt
+        - allDay
+        - calendar
+
+    CalendarBreakdown:
+      type: object
+      properties:
+        calendar:
+          $ref: "#/components/schemas/Calendar"
+        eventCount:
+          type: integer
+        upcomingCount:
+          type: integer
+      required:
+        - calendar
+        - eventCount
+        - upcomingCount
+
+    DashboardSummary:
+      type: object
+      properties:
+        totalCalendars:
+          type: integer
+        totalEvents:
+          type: integer
+        eventsToday:
+          type: integer
+        eventsThisWeek:
+          type: integer
+        nextEvent:
+          oneOf:
+            - $ref: "#/components/schemas/Event"
+            - type: "null"
+        breakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/CalendarBreakdown"
+      required:
+        - totalCalendars
+        - totalEvents
+        - eventsToday
+        - eventsThisWeek
+        - nextEvent
+        - breakdown

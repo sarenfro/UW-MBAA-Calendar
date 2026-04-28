@@ -8,3 +8,67 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface ErrorResponse {
+  error: string;
+}
+
+export interface Calendar {
+  id: number;
+  name: string;
+  /** @nullable */
+  description: string | null;
+  /** Hex color (e.g. "#7c3aed") used to tint events from this calendar */
+  color: string;
+  timezone: string;
+  /** Display name of the calendar owner / source */
+  owner: string;
+}
+
+export interface Event {
+  id: number;
+  calendarId: number;
+  title: string;
+  /** @nullable */
+  description: string | null;
+  /** @nullable */
+  location: string | null;
+  startAt: string;
+  endAt: string;
+  allDay: boolean;
+  calendar: Calendar;
+}
+
+export interface CalendarBreakdown {
+  calendar: Calendar;
+  eventCount: number;
+  upcomingCount: number;
+}
+
+export interface DashboardSummary {
+  totalCalendars: number;
+  totalEvents: number;
+  eventsToday: number;
+  eventsThisWeek: number;
+  nextEvent: Event | null;
+  breakdown: CalendarBreakdown[];
+}
+
+export type ListEventsParams = {
+  /**
+   * ISO 8601 inclusive lower bound
+   */
+  start: string;
+  /**
+   * ISO 8601 exclusive upper bound
+   */
+  end: string;
+  /**
+   * Comma-separated calendar ids to include. Omit to include all.
+   */
+  calendarIds?: string;
+};
+
+export type ListUpcomingEventsParams = {
+  limit?: number;
+};

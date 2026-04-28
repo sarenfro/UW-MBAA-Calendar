@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Calendar Dashboard"
+version = "1.0.0"
+id = "artifacts/calendar-dashboard"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23304
+
+[services.development]
+run = "pnpm --filter @workspace/calendar-dashboard run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/calendar-dashboard", "run", "build" ]
+publicDir = "artifacts/calendar-dashboard/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23304"
+BASE_PATH = "/"

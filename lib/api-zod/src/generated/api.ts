@@ -14,3 +14,191 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * @summary List all calendar sources
+ */
+export const ListCalendarsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  description: zod.string().nullable(),
+  color: zod
+    .string()
+    .describe(
+      'Hex color (e.g. \"#7c3aed\") used to tint events from this calendar',
+    ),
+  timezone: zod.string(),
+  owner: zod.string().describe("Display name of the calendar owner \/ source"),
+});
+export const ListCalendarsResponse = zod.array(ListCalendarsResponseItem);
+
+/**
+ * @summary List events in a date range, optionally filtered by calendar
+ */
+export const ListEventsQueryParams = zod.object({
+  start: zod.date().describe("ISO 8601 inclusive lower bound"),
+  end: zod.date().describe("ISO 8601 exclusive upper bound"),
+  calendarIds: zod.coerce
+    .string()
+    .optional()
+    .describe("Comma-separated calendar ids to include. Omit to include all."),
+});
+
+export const ListEventsResponseItem = zod.object({
+  id: zod.number(),
+  calendarId: zod.number(),
+  title: zod.string(),
+  description: zod.string().nullable(),
+  location: zod.string().nullable(),
+  startAt: zod.coerce.date(),
+  endAt: zod.coerce.date(),
+  allDay: zod.boolean(),
+  calendar: zod.object({
+    id: zod.number(),
+    name: zod.string(),
+    description: zod.string().nullable(),
+    color: zod
+      .string()
+      .describe(
+        'Hex color (e.g. \"#7c3aed\") used to tint events from this calendar',
+      ),
+    timezone: zod.string(),
+    owner: zod
+      .string()
+      .describe("Display name of the calendar owner \/ source"),
+  }),
+});
+export const ListEventsResponse = zod.array(ListEventsResponseItem);
+
+/**
+ * @summary Get a single event
+ */
+export const GetEventParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetEventResponse = zod.object({
+  id: zod.number(),
+  calendarId: zod.number(),
+  title: zod.string(),
+  description: zod.string().nullable(),
+  location: zod.string().nullable(),
+  startAt: zod.coerce.date(),
+  endAt: zod.coerce.date(),
+  allDay: zod.boolean(),
+  calendar: zod.object({
+    id: zod.number(),
+    name: zod.string(),
+    description: zod.string().nullable(),
+    color: zod
+      .string()
+      .describe(
+        'Hex color (e.g. \"#7c3aed\") used to tint events from this calendar',
+      ),
+    timezone: zod.string(),
+    owner: zod
+      .string()
+      .describe("Display name of the calendar owner \/ source"),
+  }),
+});
+
+/**
+ * @summary Download an .ics file for the event
+ */
+export const DownloadEventIcsParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Next upcoming events across every calendar
+ */
+export const listUpcomingEventsQueryLimitDefault = 8;
+
+export const ListUpcomingEventsQueryParams = zod.object({
+  limit: zod.coerce.number().default(listUpcomingEventsQueryLimitDefault),
+});
+
+export const ListUpcomingEventsResponseItem = zod.object({
+  id: zod.number(),
+  calendarId: zod.number(),
+  title: zod.string(),
+  description: zod.string().nullable(),
+  location: zod.string().nullable(),
+  startAt: zod.coerce.date(),
+  endAt: zod.coerce.date(),
+  allDay: zod.boolean(),
+  calendar: zod.object({
+    id: zod.number(),
+    name: zod.string(),
+    description: zod.string().nullable(),
+    color: zod
+      .string()
+      .describe(
+        'Hex color (e.g. \"#7c3aed\") used to tint events from this calendar',
+      ),
+    timezone: zod.string(),
+    owner: zod
+      .string()
+      .describe("Display name of the calendar owner \/ source"),
+  }),
+});
+export const ListUpcomingEventsResponse = zod.array(
+  ListUpcomingEventsResponseItem,
+);
+
+/**
+ * @summary High-level totals and breakdowns for the dashboard
+ */
+export const GetDashboardSummaryResponse = zod.object({
+  totalCalendars: zod.number(),
+  totalEvents: zod.number(),
+  eventsToday: zod.number(),
+  eventsThisWeek: zod.number(),
+  nextEvent: zod.union([
+    zod.object({
+      id: zod.number(),
+      calendarId: zod.number(),
+      title: zod.string(),
+      description: zod.string().nullable(),
+      location: zod.string().nullable(),
+      startAt: zod.coerce.date(),
+      endAt: zod.coerce.date(),
+      allDay: zod.boolean(),
+      calendar: zod.object({
+        id: zod.number(),
+        name: zod.string(),
+        description: zod.string().nullable(),
+        color: zod
+          .string()
+          .describe(
+            'Hex color (e.g. \"#7c3aed\") used to tint events from this calendar',
+          ),
+        timezone: zod.string(),
+        owner: zod
+          .string()
+          .describe("Display name of the calendar owner \/ source"),
+      }),
+    }),
+    zod.null(),
+  ]),
+  breakdown: zod.array(
+    zod.object({
+      calendar: zod.object({
+        id: zod.number(),
+        name: zod.string(),
+        description: zod.string().nullable(),
+        color: zod
+          .string()
+          .describe(
+            'Hex color (e.g. \"#7c3aed\") used to tint events from this calendar',
+          ),
+        timezone: zod.string(),
+        owner: zod
+          .string()
+          .describe("Display name of the calendar owner \/ source"),
+      }),
+      eventCount: zod.number(),
+      upcomingCount: zod.number(),
+    }),
+  ),
+});
