@@ -45,6 +45,41 @@ export interface CalendarBreakdown {
   upcomingCount: number;
 }
 
+export interface Member {
+  id: number;
+  name: string;
+  email: string;
+  graduationYear: number;
+  /** @nullable */
+  track: string | null;
+  /** @nullable */
+  committee: string | null;
+  duesPaid: boolean;
+  /** @nullable */
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface CreateMemberBody {
+  name: string;
+  email: string;
+  graduationYear: number;
+  track?: string;
+  committee?: string;
+  duesPaid?: boolean;
+  notes?: string;
+}
+
+export interface UpdateMemberBody {
+  name?: string;
+  email?: string;
+  graduationYear?: number;
+  track?: string;
+  committee?: string;
+  duesPaid?: boolean;
+  notes?: string;
+}
+
 export interface DashboardSummary {
   totalCalendars: number;
   totalEvents: number;
@@ -71,4 +106,9 @@ export type ListEventsParams = {
 
 export type ListUpcomingEventsParams = {
   limit?: number;
+};
+
+export type ListMembersParams = {
+  duesPaid?: boolean;
+  track?: string;
 };

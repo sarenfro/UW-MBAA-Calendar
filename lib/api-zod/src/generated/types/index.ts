@@ -8,9 +8,13 @@
 
 export * from "./calendar";
 export * from "./calendarBreakdown";
+export * from "./createMemberBody";
 export * from "./dashboardSummary";
 export * from "./errorResponse";
 export * from "./event";
 export * from "./healthStatus";
 export * from "./listEventsParams";
+export * from "./listMembersParams";
 export * from "./listUpcomingEventsParams";
+export * from "./member";
+export * from "./updateMemberBody";

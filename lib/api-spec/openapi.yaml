@@ -16,6 +16,8 @@ tags:
     description: Event operations
   - name: dashboard
     description: Dashboard summary operations
+  - name: members
+    description: MBAA membership operations
 paths:
   /healthz:
     get:
@@ -150,6 +152,105 @@ paths:
                 items:
                   $ref: "#/components/schemas/Event"
 
+  /members:
+    get:
+      operationId: listMembers
+      tags: [members]
+      summary: List MBAA members
+      parameters:
+        - in: query
+          name: duesPaid
+          required: false
+          schema:
+            type: boolean
+        - in: query
+          name: track
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Member"
+    post:
+      operationId: createMember
+      tags: [members]
+      summary: Add a new MBAA member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMemberBody"
+      responses:
+        "201":
+          description: Created member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "409":
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /members/{id}:
+    patch:
+      operationId: updateMember
+      tags: [members]
+      summary: Update a member record
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMemberBody"
+      responses:
+        "200":
+          description: Updated member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteMember
+      tags: [members]
+      summary: Remove a member
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /dashboard/summary:
     get:
       operationId: getDashboardSummary
@@ -253,6 +354,79 @@ components:
         - calendar
         - eventCount
         - upcomingCount
+
+    Member:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        graduationYear:
+          type: integer
+        track:
+          type: ["string", "null"]
+        committee:
+          type: ["string", "null"]
+        duesPaid:
+          type: boolean
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        - graduationYear
+        - track
+        - committee
+        - duesPaid
+        - notes
+        - createdAt
+
+    CreateMemberBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        graduationYear:
+          type: integer
+        track:
+          type: string
+        committee:
+          type: string
+        duesPaid:
+          type: boolean
+        notes:
+          type: string
+      required:
+        - name
+        - email
+        - graduationYear
+
+    UpdateMemberBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        graduationYear:
+          type: integer
+        track:
+          type: string
+        committee:
+          type: string
+        duesPaid:
+          type: boolean
+        notes:
+          type: string
 
     DashboardSummary:
       type: object

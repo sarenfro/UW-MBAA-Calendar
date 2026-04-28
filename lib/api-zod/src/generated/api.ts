@@ -147,6 +147,76 @@ export const ListUpcomingEventsResponse = zod.array(
 );
 
 /**
+ * @summary List MBAA members
+ */
+export const ListMembersQueryParams = zod.object({
+  duesPaid: zod.coerce.boolean().optional(),
+  track: zod.coerce.string().optional(),
+});
+
+export const ListMembersResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  email: zod.string(),
+  graduationYear: zod.number(),
+  track: zod.string().nullable(),
+  committee: zod.string().nullable(),
+  duesPaid: zod.boolean(),
+  notes: zod.string().nullable(),
+  createdAt: zod.coerce.date(),
+});
+export const ListMembersResponse = zod.array(ListMembersResponseItem);
+
+/**
+ * @summary Add a new MBAA member
+ */
+export const CreateMemberBody = zod.object({
+  name: zod.string(),
+  email: zod.string(),
+  graduationYear: zod.number(),
+  track: zod.string().optional(),
+  committee: zod.string().optional(),
+  duesPaid: zod.boolean().optional(),
+  notes: zod.string().optional(),
+});
+
+/**
+ * @summary Update a member record
+ */
+export const UpdateMemberParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateMemberBody = zod.object({
+  name: zod.string().optional(),
+  email: zod.string().optional(),
+  graduationYear: zod.number().optional(),
+  track: zod.string().optional(),
+  committee: zod.string().optional(),
+  duesPaid: zod.boolean().optional(),
+  notes: zod.string().optional(),
+});
+
+export const UpdateMemberResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  email: zod.string(),
+  graduationYear: zod.number(),
+  track: zod.string().nullable(),
+  committee: zod.string().nullable(),
+  duesPaid: zod.boolean(),
+  notes: zod.string().nullable(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Remove a member
+ */
+export const DeleteMemberParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
  * @summary High-level totals and breakdowns for the dashboard
  */
 export const GetDashboardSummaryResponse = zod.object({

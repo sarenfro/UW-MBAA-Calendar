@@ -5,26 +5,33 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
 import type {
   Calendar,
+  CreateMemberBody,
   DashboardSummary,
   ErrorResponse,
   Event,
   HealthStatus,
   ListEventsParams,
+  ListMembersParams,
   ListUpcomingEventsParams,
+  Member,
+  UpdateMemberBody,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
-import type { ErrorType } from "../custom-fetch";
+import type { ErrorType, BodyType } from "../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -545,6 +552,357 @@ export function useListUpcomingEvents<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary List MBAA members
+ */
+export const getListMembersUrl = (params?: ListMembersParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/members?${stringifiedParams}`
+    : `/api/members`;
+};
+
+export const listMembers = async (
+  params?: ListMembersParams,
+  options?: RequestInit,
+): Promise<Member[]> => {
+  return customFetch<Member[]>(getListMembersUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMembersQueryKey = (params?: ListMembersParams) => {
+  return [`/api/members`, ...(params ? [params] : [])] as const;
+};
+
+export const getListMembersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMembers>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListMembersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listMembers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListMembersQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listMembers>>> = ({
+    signal,
+  }) => listMembers(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMembers>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListMembersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMembers>>
+>;
+export type ListMembersQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List MBAA members
+ */
+
+export function useListMembers<
+  TData = Awaited<ReturnType<typeof listMembers>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListMembersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listMembers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListMembersQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Add a new MBAA member
+ */
+export const getCreateMemberUrl = () => {
+  return `/api/members`;
+};
+
+export const createMember = async (
+  createMemberBody: CreateMemberBody,
+  options?: RequestInit,
+): Promise<Member> => {
+  return customFetch<Member>(getCreateMemberUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createMemberBody),
+  });
+};
+
+export const getCreateMemberMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createMember>>,
+    TError,
+    { data: BodyType<CreateMemberBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createMember>>,
+  TError,
+  { data: BodyType<CreateMemberBody> },
+  TContext
+> => {
+  const mutationKey = ["createMember"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createMember>>,
+    { data: BodyType<CreateMemberBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createMember(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateMemberMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createMember>>
+>;
+export type CreateMemberMutationBody = BodyType<CreateMemberBody>;
+export type CreateMemberMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Add a new MBAA member
+ */
+export const useCreateMember = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createMember>>,
+    TError,
+    { data: BodyType<CreateMemberBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createMember>>,
+  TError,
+  { data: BodyType<CreateMemberBody> },
+  TContext
+> => {
+  return useMutation(getCreateMemberMutationOptions(options));
+};
+
+/**
+ * @summary Update a member record
+ */
+export const getUpdateMemberUrl = (id: number) => {
+  return `/api/members/${id}`;
+};
+
+export const updateMember = async (
+  id: number,
+  updateMemberBody: UpdateMemberBody,
+  options?: RequestInit,
+): Promise<Member> => {
+  return customFetch<Member>(getUpdateMemberUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateMemberBody),
+  });
+};
+
+export const getUpdateMemberMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMember>>,
+    TError,
+    { id: number; data: BodyType<UpdateMemberBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateMember>>,
+  TError,
+  { id: number; data: BodyType<UpdateMemberBody> },
+  TContext
+> => {
+  const mutationKey = ["updateMember"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateMember>>,
+    { id: number; data: BodyType<UpdateMemberBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateMember(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateMemberMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateMember>>
+>;
+export type UpdateMemberMutationBody = BodyType<UpdateMemberBody>;
+export type UpdateMemberMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Update a member record
+ */
+export const useUpdateMember = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMember>>,
+    TError,
+    { id: number; data: BodyType<UpdateMemberBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateMember>>,
+  TError,
+  { id: number; data: BodyType<UpdateMemberBody> },
+  TContext
+> => {
+  return useMutation(getUpdateMemberMutationOptions(options));
+};
+
+/**
+ * @summary Remove a member
+ */
+export const getDeleteMemberUrl = (id: number) => {
+  return `/api/members/${id}`;
+};
+
+export const deleteMember = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteMemberUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteMemberMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteMember>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteMember>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteMember"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteMember>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteMember(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteMemberMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteMember>>
+>;
+
+export type DeleteMemberMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Remove a member
+ */
+export const useDeleteMember = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteMember>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteMember>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteMemberMutationOptions(options));
+};
 
 /**
  * @summary High-level totals and breakdowns for the dashboard
