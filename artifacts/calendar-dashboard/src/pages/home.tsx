@@ -65,7 +65,6 @@ export default function Home() {
           and add it to your own calendar.
         </p>
       </section>
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
         <aside className="lg:col-span-3 space-y-10">
           <CalendarSidebar
@@ -111,7 +110,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-
       <section className="mt-20 lg:mt-28 border-t border-border/60 pt-12">
         <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-muted-foreground mb-3">
           More from the MBAA
@@ -124,7 +122,7 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border/60 border border-border/60">
           <Link
             href="/membership"
-            className="group bg-background hover:bg-card transition-colors p-8 flex flex-col gap-4 min-h-[180px]"
+            className="group bg-background hover:bg-card transition-colors p-8 flex flex-col gap-4 min-h-[180px] mt-[80px] mb-[80px]"
           >
             <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-primary">
               01 · Roster
@@ -139,7 +137,6 @@ export default function Home() {
           </Link>
         </div>
       </section>
-
       <EventDialog
         event={selectedEvent}
         open={!!selectedEvent}
