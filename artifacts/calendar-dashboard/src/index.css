@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..700;1,300..700&family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
@@ -124,7 +124,7 @@
   --chart-5: 27 87% 67%;
 
   --app-font-sans: 'Inter', sans-serif;
-  --app-font-serif: 'Fraunces', 'Playfair Display', Georgia, serif;
+  --app-font-serif: 'Open Sans', 'Inter', system-ui, sans-serif;
   --app-font-mono: Menlo, monospace;
   
   --radius: 0.75rem;
