@@ -1,11 +1,9 @@
 import { useRoute } from "wouter";
 import { format } from "date-fns";
-import { Download, MapPin, Clock, Calendar as CalendarIcon, User, ArrowLeft } from "lucide-react";
+import { Download, MapPin, Clock, ArrowLeft } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { hexToRgba } from "@/lib/utils";
 import { useGetEvent, getGetEventQueryKey } from "@workspace/api-client-react";
 import { Link } from "wouter";
 
@@ -16,8 +14,8 @@ export default function EventDetail() {
   const { data: event, isLoading, error } = useGetEvent(eventId, {
     query: {
       enabled: !!eventId,
-      queryKey: getGetEventQueryKey(eventId)
-    }
+      queryKey: getGetEventQueryKey(eventId),
+    },
   });
 
   const handleDownloadIcs = async () => {
@@ -33,27 +31,22 @@ export default function EventDetail() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Failed to download ICS", error);
+    } catch (err) {
+      console.error("Failed to download ICS", err);
     }
   };
 
   if (isLoading) {
     return (
       <Layout>
-        <div className="max-w-3xl mx-auto mt-8">
-          <Skeleton className="h-10 w-24 mb-8" />
-          <div className="bg-card rounded-2xl border border-border/40 shadow-sm overflow-hidden">
+        <div className="max-w-3xl mx-auto">
+          <Skeleton className="h-8 w-32 mb-10" />
+          <Skeleton className="h-3 w-24 mb-4" />
+          <Skeleton className="h-14 w-3/4 mb-3" />
+          <Skeleton className="h-14 w-2/3 mb-10" />
+          <div className="space-y-4">
             <Skeleton className="h-4 w-full" />
-            <div className="p-8 md:p-12 space-y-6">
-              <Skeleton className="h-12 w-3/4" />
-              <Skeleton className="h-6 w-1/2" />
-              <div className="pt-8 space-y-4">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-5/6" />
-                <Skeleton className="h-4 w-4/6" />
-              </div>
-            </div>
+            <Skeleton className="h-4 w-5/6" />
           </div>
         </div>
       </Layout>
@@ -64,9 +57,14 @@ export default function EventDetail() {
     return (
       <Layout>
         <div className="max-w-3xl mx-auto mt-12 text-center">
-          <h2 className="text-2xl font-serif mb-4 text-foreground/80">Event not found</h2>
-          <Button asChild variant="outline">
-            <Link href="/">Back to Dashboard</Link>
+          <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-muted-foreground mb-3">
+            Not Found
+          </p>
+          <h2 className="font-serif text-3xl mb-6">
+            We couldn't find that <em className="italic font-light">event</em>.
+          </h2>
+          <Button asChild variant="outline" className="rounded-sm">
+            <Link href="/">Back to calendar</Link>
           </Button>
         </div>
       </Layout>
@@ -78,108 +76,94 @@ export default function EventDetail() {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto mt-4 mb-16">
-        <Button variant="ghost" asChild className="mb-6 -ml-4 text-muted-foreground hover:text-foreground">
+      <div className="max-w-3xl mx-auto">
+        <Button
+          variant="ghost"
+          asChild
+          className="mb-10 -ml-3 text-muted-foreground hover:text-primary text-xs font-semibold tracking-[0.18em] uppercase"
+        >
           <Link href="/">
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="mr-2 h-3.5 w-3.5" />
             Back to Calendar
           </Link>
         </Button>
 
-        <div className="bg-card rounded-2xl border border-border/60 shadow-sm overflow-hidden">
-          <div 
-            className="h-3 w-full" 
-            style={{ backgroundColor: event.calendar.color }} 
-          />
-          
-          <div className="p-8 md:p-12">
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-10">
-              <div className="space-y-4">
-                <Badge 
-                  variant="outline" 
-                  className="font-medium px-3 py-1 text-sm border-2 shadow-2xs"
-                  style={{ 
-                    backgroundColor: hexToRgba(event.calendar.color, 0.05),
-                    color: event.calendar.color,
-                    borderColor: hexToRgba(event.calendar.color, 0.15)
-                  }}
-                >
-                  {event.calendar.name}
-                </Badge>
-                
-                <h1 className="text-4xl md:text-5xl font-serif tracking-tight text-foreground leading-tight">
-                  {event.title}
-                </h1>
-              </div>
-
-              <Button 
-                onClick={handleDownloadIcs} 
-                size="lg"
-                className="shrink-0 font-medium shadow-sm transition-all hover:shadow-md"
-              >
-                <Download className="mr-2 h-5 w-5" />
-                Download .ics
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 bg-muted/20 p-6 rounded-2xl border border-border/40">
-              <div className="flex items-start gap-4">
-                <div className="h-10 w-10 rounded-full bg-background border border-border/60 shadow-sm flex items-center justify-center shrink-0">
-                  <Clock className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-foreground mb-1">Time</h3>
-                  <div className="text-muted-foreground text-sm">
-                    <p className="font-medium mb-0.5">{format(start, "EEEE, MMMM d, yyyy")}</p>
-                    <p>{event.allDay ? "All Day" : `${format(start, "h:mm a")} to ${format(end, "h:mm a")}`}</p>
-                  </div>
-                </div>
-              </div>
-
-              {event.location && (
-                <div className="flex items-start gap-4">
-                  <div className="h-10 w-10 rounded-full bg-background border border-border/60 shadow-sm flex items-center justify-center shrink-0">
-                    <MapPin className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-foreground mb-1">Location</h3>
-                    <div className="text-muted-foreground text-sm">
-                      <p>{event.location}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {event.description && (
-              <div className="mb-12">
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Description</h3>
-                <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none text-foreground/80 leading-relaxed bg-background/50 p-6 rounded-xl border border-border/30">
-                  <p className="whitespace-pre-wrap">{event.description}</p>
-                </div>
-              </div>
-            )}
-
-            <div className="pt-8 border-t border-border/40">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Calendar Source</h3>
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="h-8 w-8 rounded-full flex items-center justify-center shadow-sm"
-                      style={{ backgroundColor: hexToRgba(event.calendar.color, 0.1), color: event.calendar.color }}
-                    >
-                      <User className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground text-sm">{event.calendar.owner}</p>
-                      <p className="text-xs text-muted-foreground">{event.calendar.name}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div className="mb-10">
+          <div className="flex items-center gap-3 mb-5">
+            <span
+              className="inline-block w-2.5 h-2.5 rounded-full"
+              style={{ backgroundColor: event.calendar.color }}
+            />
+            <p
+              className="text-[10px] font-semibold tracking-[0.22em] uppercase"
+              style={{ color: event.calendar.color }}
+            >
+              {event.calendar.name} · {event.calendar.owner}
+            </p>
           </div>
+
+          <h1 className="font-serif text-4xl md:text-6xl tracking-tight leading-[1.05] text-foreground">
+            {event.title}
+          </h1>
+        </div>
+
+        <div className="border-t border-b border-border/60 py-8 grid grid-cols-1 sm:grid-cols-2 gap-8 mb-12">
+          <div>
+            <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-muted-foreground mb-3 flex items-center gap-2">
+              <Clock className="h-3 w-3" />
+              When
+            </p>
+            <p className="font-serif text-xl text-foreground leading-tight">
+              {format(start, "EEEE, MMMM d")}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1.5">
+              {event.allDay
+                ? "All day"
+                : `${format(start, "h:mm a")} – ${format(end, "h:mm a")}`}
+            </p>
+          </div>
+
+          {event.location && (
+            <div>
+              <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-muted-foreground mb-3 flex items-center gap-2">
+                <MapPin className="h-3 w-3" />
+                Where
+              </p>
+              <p className="font-serif text-xl text-foreground leading-tight">
+                {event.location}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {event.description && (
+          <div className="mb-14">
+            <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-muted-foreground mb-4">
+              Details
+            </p>
+            <p className="text-base md:text-lg text-foreground/85 leading-relaxed whitespace-pre-wrap">
+              {event.description}
+            </p>
+          </div>
+        )}
+
+        <div className="border-t border-border/60 pt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-muted-foreground mb-1">
+              Take it with you
+            </p>
+            <p className="font-serif text-lg italic font-light text-foreground/80">
+              Add this to any calendar app.
+            </p>
+          </div>
+          <Button
+            onClick={handleDownloadIcs}
+            size="lg"
+            className="rounded-sm font-semibold tracking-wider uppercase text-xs h-11 px-6"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Download .ics
+          </Button>
         </div>
       </div>
     </Layout>

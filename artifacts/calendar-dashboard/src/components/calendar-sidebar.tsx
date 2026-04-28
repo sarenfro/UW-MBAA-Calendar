@@ -1,7 +1,6 @@
-import { Calendar as CalendarIcon, Check, Layers } from "lucide-react";
-import { cn, hexToRgba } from "@/lib/utils";
+import { Check, Layers } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { Calendar } from "@workspace/api-client-react";
-import { Button } from "./ui/button";
 
 interface CalendarSidebarProps {
   calendars: Calendar[] | undefined;
@@ -10,14 +9,19 @@ interface CalendarSidebarProps {
   isLoading: boolean;
 }
 
-export function CalendarSidebar({ calendars, hiddenCalendarIds, onToggle, isLoading }: CalendarSidebarProps) {
+export function CalendarSidebar({
+  calendars,
+  hiddenCalendarIds,
+  onToggle,
+  isLoading,
+}: CalendarSidebarProps) {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="h-6 w-24 bg-muted animate-pulse rounded" />
-        <div className="space-y-3">
+        <div className="h-3 w-20 bg-muted animate-pulse rounded" />
+        <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-12 bg-muted animate-pulse rounded-xl" />
+            <div key={i} className="h-7 bg-muted animate-pulse rounded" />
           ))}
         </div>
       </div>
@@ -26,51 +30,67 @@ export function CalendarSidebar({ calendars, hiddenCalendarIds, onToggle, isLoad
 
   if (!calendars?.length) {
     return (
-      <div className="text-center p-6 bg-muted/20 rounded-xl border border-border border-dashed">
-        <Layers className="h-8 w-8 mx-auto text-muted-foreground mb-3 opacity-50" />
-        <p className="text-sm text-muted-foreground">No calendars found.</p>
+      <div className="space-y-4">
+        <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-muted-foreground">
+          Sources
+        </p>
+        <div className="text-center p-6 border border-dashed border-border/60 rounded-sm">
+          <Layers className="h-6 w-6 mx-auto text-muted-foreground mb-2 opacity-50" />
+          <p className="text-sm text-muted-foreground">No calendars found.</p>
+        </div>
       </div>
     );
   }
 
-  const allHidden = calendars.every(c => hiddenCalendarIds.has(c.id));
+  const allHidden = calendars.every((c) => hiddenCalendarIds.has(c.id));
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold tracking-wider uppercase text-muted-foreground">Calendars</h3>
+        <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-muted-foreground">
+          Sources
+        </p>
         {allHidden && (
-          <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+          <span className="text-[9px] font-semibold tracking-[0.18em] uppercase text-muted-foreground">
             All hidden
           </span>
         )}
       </div>
 
-      <div className="space-y-0.5">
+      <h3 className="font-serif text-2xl tracking-tight leading-tight">
+        Filter by{" "}
+        <em className="italic font-light text-primary">calendar</em>
+      </h3>
+
+      <div className="space-y-0.5 pt-1">
         {calendars.map((calendar) => {
           const isHidden = hiddenCalendarIds.has(calendar.id);
           return (
             <button
               key={calendar.id}
               onClick={() => onToggle(calendar.id)}
-              className={cn(
-                "w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md transition-colors text-left",
-                "hover:bg-muted/60"
-              )}
+              className="w-full flex items-center gap-3 py-1.5 group text-left"
             >
               <div
-                className="w-3 h-3 rounded-sm flex-shrink-0 border transition-colors flex items-center justify-center"
+                className="w-3.5 h-3.5 rounded-full flex-shrink-0 border transition-colors flex items-center justify-center"
                 style={{
                   borderColor: calendar.color,
                   backgroundColor: isHidden ? "transparent" : calendar.color,
                 }}
               >
-                {!isHidden && <Check className="w-2 h-2 text-white" strokeWidth={4} />}
+                {!isHidden && (
+                  <Check
+                    className="w-2 h-2 text-white"
+                    strokeWidth={4}
+                  />
+                )}
               </div>
               <span
                 className={cn(
-                  "text-sm truncate transition-colors",
-                  isHidden ? "text-muted-foreground line-through decoration-1" : "text-foreground"
+                  "text-sm transition-colors group-hover:text-primary",
+                  isHidden
+                    ? "text-muted-foreground line-through decoration-1"
+                    : "text-foreground",
                 )}
               >
                 {calendar.name}

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
@@ -77,45 +77,45 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: 45 29% 97%;
-  --foreground: 20 14% 15%;
+  --background: 60 23% 97%;
+  --foreground: 0 0% 10%;
 
-  --border: 45 15% 88%;
+  --border: 45 12% 86%;
 
   --card: 0 0% 100%;
-  --card-foreground: 20 14% 15%;
-  --card-border: 45 15% 88%;
+  --card-foreground: 0 0% 10%;
+  --card-border: 45 12% 86%;
 
-  --sidebar: 45 29% 97%;
-  --sidebar-foreground: 20 14% 15%;
-  --sidebar-border: 45 15% 88%;
-  --sidebar-primary: 24 50% 45%;
-  --sidebar-primary-foreground: 45 29% 97%;
-  --sidebar-accent: 45 20% 92%;
-  --sidebar-accent-foreground: 20 14% 15%;
-  --sidebar-ring: 24 50% 45%;
+  --sidebar: 60 23% 97%;
+  --sidebar-foreground: 0 0% 10%;
+  --sidebar-border: 45 12% 86%;
+  --sidebar-primary: 259 49% 35%;
+  --sidebar-primary-foreground: 60 23% 97%;
+  --sidebar-accent: 45 25% 92%;
+  --sidebar-accent-foreground: 0 0% 10%;
+  --sidebar-ring: 259 49% 35%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 20 14% 15%;
-  --popover-border: 45 15% 88%;
+  --popover-foreground: 0 0% 10%;
+  --popover-border: 45 12% 86%;
 
-  --primary: 24 50% 45%;
-  --primary-foreground: 45 29% 97%;
+  --primary: 259 49% 35%;
+  --primary-foreground: 60 23% 97%;
 
-  --secondary: 45 20% 92%;
-  --secondary-foreground: 20 14% 15%;
+  --secondary: 39 30% 60%;
+  --secondary-foreground: 0 0% 10%;
 
-  --muted: 45 20% 92%;
-  --muted-foreground: 20 10% 45%;
+  --muted: 45 20% 93%;
+  --muted-foreground: 0 0% 38%;
 
-  --accent: 45 20% 92%;
-  --accent-foreground: 20 14% 15%;
+  --accent: 39 30% 60%;
+  --accent-foreground: 0 0% 10%;
 
-  --destructive: 0 84% 60%;
+  --destructive: 0 75% 45%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 45 15% 88%;
-  --ring: 24 50% 45%;
+  --input: 45 12% 86%;
+  --ring: 259 49% 35%;
 
   --chart-1: 12 76% 61%;
   --chart-2: 173 58% 39%;
@@ -124,7 +124,7 @@
   --chart-5: 27 87% 67%;
 
   --app-font-sans: 'Inter', sans-serif;
-  --app-font-serif: 'Instrument Serif', Georgia, serif;
+  --app-font-serif: 'Fraunces', 'Playfair Display', Georgia, serif;
   --app-font-mono: Menlo, monospace;
   
   --radius: 0.75rem;
@@ -226,6 +226,7 @@
   
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif font-normal tracking-tight;
+    font-feature-settings: "ss01", "ss02";
   }
 }
 

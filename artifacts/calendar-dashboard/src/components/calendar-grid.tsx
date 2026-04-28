@@ -1,5 +1,17 @@
-import { useState } from "react";
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, startOfMonth, endOfMonth, isSameMonth, isSameDay, addMonths, subMonths, isToday, startOfDay, endOfDay } from "date-fns";
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  startOfMonth,
+  endOfMonth,
+  isSameMonth,
+  addMonths,
+  subMonths,
+  isToday,
+  startOfDay,
+  endOfDay,
+} from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { hexToRgba, cn } from "@/lib/utils";
@@ -13,13 +25,17 @@ interface CalendarGridProps {
   onDateChange: (date: Date) => void;
 }
 
-export function CalendarGrid({ events, onEventClick, currentDate, onDateChange }: CalendarGridProps) {
+export function CalendarGrid({
+  events,
+  onEventClick,
+  currentDate,
+  onDateChange,
+}: CalendarGridProps) {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(monthStart);
   const startDate = startOfWeek(monthStart);
   const endDate = endOfWeek(monthEnd);
 
-  const dateFormat = "d";
   const days = eachDayOfInterval({ start: startDate, end: endDate });
 
   const nextMonth = () => onDateChange(addMonths(currentDate, 1));
@@ -29,38 +45,67 @@ export function CalendarGrid({ events, onEventClick, currentDate, onDateChange }
   const getEventsForDay = (day: Date) => {
     const dayStart = startOfDay(day);
     const dayEnd = endOfDay(day);
-    return events.filter(event => {
-      const eventStart = new Date(event.startAt);
-      const eventEnd = new Date(event.endAt);
-      
-      return eventStart <= dayEnd && eventEnd >= dayStart;
-    }).sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+    return events
+      .filter((event) => {
+        const eventStart = new Date(event.startAt);
+        const eventEnd = new Date(event.endAt);
+        return eventStart <= dayEnd && eventEnd >= dayStart;
+      })
+      .sort(
+        (a, b) =>
+          new Date(a.startAt).getTime() - new Date(b.startAt).getTime(),
+      );
   };
 
+  const monthName = format(currentDate, "MMMM");
+  const yearName = format(currentDate, "yyyy");
+
   return (
-    <div className="flex flex-col h-full bg-card rounded-2xl border border-border/60 shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border/40">
-        <h2 className="text-2xl font-serif tracking-tight">
-          {format(currentDate, "MMMM yyyy")}
+    <div className="flex flex-col h-full bg-card border border-border/60 rounded-sm overflow-hidden">
+      <div className="flex items-end justify-between px-7 py-6 border-b border-border/60">
+        <h2 className="font-serif text-3xl md:text-4xl tracking-tight leading-none">
+          {monthName}{" "}
+          <em className="italic font-light text-muted-foreground">
+            {yearName}
+          </em>
         </h2>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={goToToday} className="h-8 px-3 font-medium">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={goToToday}
+            className="h-8 px-3 text-xs font-semibold tracking-wider uppercase rounded-sm"
+          >
             Today
           </Button>
-          <div className="flex items-center gap-1 border border-border/60 rounded-md p-0.5">
-            <Button variant="ghost" size="icon" onClick={prevMonth} className="h-7 w-7 rounded-sm">
+          <div className="flex items-center border border-border/60 rounded-sm">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={prevMonth}
+              className="h-8 w-8 rounded-none rounded-l-sm"
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={nextMonth} className="h-7 w-7 rounded-sm">
+            <div className="w-px h-5 bg-border/60" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={nextMonth}
+              className="h-8 w-8 rounded-none rounded-r-sm"
+            >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-7 border-b border-border/40 bg-muted/20">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-          <div key={day} className="py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
+      <div className="grid grid-cols-7 border-b border-border/60">
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+          <div
+            key={day}
+            className="py-3 text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.18em]"
+          >
             {day}
           </div>
         ))}
@@ -71,29 +116,38 @@ export function CalendarGrid({ events, onEventClick, currentDate, onDateChange }
           const dayEvents = getEventsForDay(day);
           const isCurrentMonth = isSameMonth(day, monthStart);
           const isCurrentDay = isToday(day);
-          
+
           return (
             <div
               key={day.toString()}
               className={cn(
-                "min-h-[120px] p-2 border-r border-b border-border/40 relative group transition-colors hover:bg-muted/10",
-                !isCurrentMonth && "bg-muted/5 text-muted-foreground/50",
+                "min-h-[120px] p-2.5 border-r border-b border-border/60 relative transition-colors hover:bg-muted/30",
+                !isCurrentMonth && "bg-muted/20",
                 dayIdx % 7 === 6 && "border-r-0",
-                dayIdx >= days.length - 7 && "border-b-0"
+                dayIdx >= days.length - 7 && "border-b-0",
               )}
             >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className={cn(
-                  "text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full",
-                  isCurrentDay 
-                    ? "bg-primary text-primary-foreground shadow-sm" 
-                    : !isCurrentMonth ? "text-muted-foreground/50" : "text-foreground/80"
-                )}>
-                  {format(day, dateFormat)}
+              <div className="flex items-center justify-between mb-2">
+                <span
+                  className={cn(
+                    "font-serif text-base leading-none",
+                    isCurrentDay
+                      ? "text-primary font-medium"
+                      : !isCurrentMonth
+                        ? "text-muted-foreground/50"
+                        : "text-foreground/80",
+                  )}
+                >
+                  {format(day, "d")}
                 </span>
+                {isCurrentDay && (
+                  <span className="text-[8px] font-semibold tracking-[0.18em] uppercase text-primary">
+                    Today
+                  </span>
+                )}
               </div>
-              
-              <div className="space-y-1.5 max-h-[calc(100%-2rem)] overflow-y-auto pr-1 custom-scrollbar">
+
+              <div className="space-y-1 max-h-[calc(100%-2rem)] overflow-y-auto pr-0.5 custom-scrollbar">
                 {dayEvents.slice(0, 4).map((event) => {
                   const eventStart = new Date(event.startAt);
                   return (
@@ -103,22 +157,25 @@ export function CalendarGrid({ events, onEventClick, currentDate, onDateChange }
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2 }}
                       onClick={() => onEventClick(event)}
-                      className="text-xs px-2 py-1 rounded-md truncate cursor-pointer transition-transform hover:scale-[1.02] border-l-2 shadow-2xs"
+                      className="text-[11px] px-1.5 py-1 truncate cursor-pointer transition-colors border-l-2 hover:bg-muted/40"
                       style={{
-                        backgroundColor: hexToRgba(event.calendar.color, 0.1),
-                        color: event.calendar.color,
                         borderLeftColor: event.calendar.color,
+                        backgroundColor: hexToRgba(event.calendar.color, 0.06),
+                        color: "hsl(var(--foreground))",
                       }}
                     >
-                      <span className="font-semibold mr-1">
-                        {event.allDay ? "" : format(eventStart, "HH:mm")}
+                      <span
+                        className="font-semibold mr-1.5"
+                        style={{ color: event.calendar.color }}
+                      >
+                        {event.allDay ? "" : format(eventStart, "h:mma").toLowerCase()}
                       </span>
-                      {event.title}
+                      <span className="text-foreground/85">{event.title}</span>
                     </motion.div>
-                  )
+                  );
                 })}
                 {dayEvents.length > 4 && (
-                  <div className="text-xs font-medium text-muted-foreground pl-1">
+                  <div className="text-[10px] font-semibold tracking-wider uppercase text-muted-foreground pl-1.5 pt-0.5">
                     + {dayEvents.length - 4} more
                   </div>
                 )}
