@@ -122,7 +122,7 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border/60 border border-border/60">
           <Link
             href="/membership"
-            className="group bg-background hover:bg-card transition-colors p-8 flex flex-col gap-4 min-h-[180px]"
+            className="group bg-background hover:bg-card transition-colors p-5 flex flex-col gap-2 min-h-[90px]"
           >
             <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-primary">
               01 · Roster
