@@ -131,7 +131,7 @@ export default function Home() {
               MBAA <em className="italic font-light">Membership</em> Records
             </h3>
             <div className="flex items-center justify-between text-sm text-muted-foreground group-hover:text-primary transition-colors">
-              <span>Dues, attendance, committees</span>
+              <span>find out what clubs you registered for</span>
               <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </div>
           </Link>
