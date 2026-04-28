@@ -449,24 +449,6 @@ function BrowseClubTab() {
             </div>
           </div>
 
-          <div>
-            <SectionLabel>
-              Dues collected ({summary.currentAcademicYear})
-            </SectionLabel>
-            <div className="grid grid-cols-3 gap-px border border-border/60">
-              <StatCard label="Gross" value={fmtMoney(summary.amountPaid)} />
-              <StatCard
-                label="PayPal fees (3.5%)"
-                value={fmtMoney(summary.paypalFee)}
-              />
-              <StatCard
-                label="Net dues"
-                value={fmtMoney(summary.netDues)}
-                accent
-              />
-            </div>
-          </div>
-
           {summary.yearOverYear.length > 0 && (
             <div>
               <SectionLabel>Year-over-year membership</SectionLabel>
