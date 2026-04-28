@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { Link } from "wouter";
-import { ArrowUpRight } from "lucide-react";
 import { startOfMonth, endOfMonth } from "date-fns";
 import { Layout } from "@/components/layout";
 import { CalendarSidebar } from "@/components/calendar-sidebar";
@@ -119,23 +117,6 @@ export default function Home() {
           <em className="italic font-light text-primary">go</em>
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border/60 border border-border/60">
-          <Link
-            href="/membership"
-            className="group bg-background hover:bg-card transition-colors p-8 flex flex-col gap-4 min-h-[180px] mt-[80px] mb-[80px]"
-          >
-            <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-primary">
-              01 · Roster
-            </p>
-            <h3 className="font-serif text-2xl tracking-tight leading-tight flex-1">
-              MBAA <em className="italic font-light">Membership</em> Records
-            </h3>
-            <div className="flex items-center justify-between text-sm text-muted-foreground group-hover:text-primary transition-colors">
-              <span>Dues, attendance, committees</span>
-              <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </div>
-          </Link>
-        </div>
       </section>
       <EventDialog
         event={selectedEvent}
