@@ -32,7 +32,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  useGetMembershipSummary,
   useSearchMembers,
   getSearchMembersQueryKey,
   useGetMemberMemberships,
@@ -48,15 +47,6 @@ import type { Club, TokenErrorResponse } from "@workspace/api-client-react";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
-function fmtMoney(n: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
 function fmtDate(iso: string) {
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
@@ -71,29 +61,6 @@ function fmtProgram(p: string) {
 }
 
 // ─── shared atoms ─────────────────────────────────────────────────────────────
-
-function StatCard({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string | number;
-  accent?: boolean;
-}) {
-  return (
-    <div className="border border-border/60 p-6">
-      <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-muted-foreground mb-2">
-        {label}
-      </p>
-      <p
-        className={`font-serif text-4xl tracking-tight leading-none${accent ? " text-primary" : " text-foreground"}`}
-      >
-        {value}
-      </p>
-    </div>
-  );
-}
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -865,9 +832,6 @@ export default function Membership() {
   const urlClub = searchParams.get("club") ?? "";
   const defaultTab = urlToken && urlClub ? "lead" : "find";
 
-  const { data: summary, isLoading: summaryLoading } =
-    useGetMembershipSummary();
-
   return (
     <Layout>
       <Button
@@ -894,33 +858,6 @@ export default function Membership() {
           your roster as a club lead.
         </p>
       </section>
-
-      <div className="grid grid-cols-3 gap-px border border-border/60 mb-12">
-        {summaryLoading ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="p-6 border border-border/60">
-              <Skeleton className="h-3 w-24 mb-3" />
-              <Skeleton className="h-10 w-16" />
-            </div>
-          ))
-        ) : (
-          <>
-            <StatCard
-              label="Active members"
-              value={summary?.totalActiveMembers ?? 0}
-              accent
-            />
-            <StatCard
-              label={`Dues collected (${summary?.currentAcademicYear ?? ""})`}
-              value={fmtMoney(summary?.totalDuesCollected ?? 0)}
-            />
-            <StatCard
-              label="Active clubs"
-              value={summary?.activeClubCount ?? 0}
-            />
-          </>
-        )}
-      </div>
 
       <Tabs defaultValue={defaultTab} className="space-y-8">
         <TabsList className="border border-border/60 bg-transparent p-0.5 rounded-none gap-0 h-auto">
