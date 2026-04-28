@@ -7,6 +7,8 @@
  */
 
 export * from "./addClubLeadBody";
+export * from "./adminVerifyBody";
+export * from "./adminVerifyResponse";
 export * from "./calendar";
 export * from "./calendarBreakdown";
 export * from "./club";

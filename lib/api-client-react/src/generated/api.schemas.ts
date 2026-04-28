@@ -212,6 +212,14 @@ export interface ClubRoster {
   renewalForecast: RenewalForecast;
 }
 
+export interface AdminVerifyBody {
+  password: string;
+}
+
+export interface AdminVerifyResponse {
+  ok: boolean;
+}
+
 export interface ClubLead {
   leadId: string;
   memberId: string;

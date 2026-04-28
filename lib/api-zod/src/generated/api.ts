@@ -342,6 +342,17 @@ export const RequestRosterAccessResponse = zod.object({
 });
 
 /**
+ * @summary Verify the admin password
+ */
+export const VerifyAdminPasswordBody = zod.object({
+  password: zod.string(),
+});
+
+export const VerifyAdminPasswordResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
  * @summary List all registered leads for a club
  */
 export const ListClubLeadsParams = zod.object({

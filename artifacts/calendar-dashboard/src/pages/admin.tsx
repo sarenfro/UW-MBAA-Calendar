@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Trash2, Plus, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, ShieldAlert, Lock } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,9 +28,12 @@ import {
   getListClubLeadsQueryKey,
   useAddClubLead,
   useRemoveClubLead,
+  useVerifyAdminPassword,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+
+const SESSION_KEY = "mbaa_admin_unlocked";
 
 function fmtDate(iso: string) {
   return new Intl.DateTimeFormat("en-US", {
@@ -47,6 +50,98 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
     </p>
   );
 }
+
+// ─── Password gate ────────────────────────────────────────────────────────────
+
+function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const verify = useVerifyAdminPassword({
+    mutation: {
+      onSuccess: (data) => {
+        if (data.ok) {
+          sessionStorage.setItem(SESSION_KEY, "1");
+          onUnlock();
+        } else {
+          setError("Incorrect password.");
+        }
+      },
+      onError: () => {
+        setError("Incorrect password.");
+      },
+    },
+  });
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!password) return;
+    verify.mutate({ data: { password } });
+  }
+
+  return (
+    <Layout>
+      <div className="min-h-[60vh] flex flex-col items-center justify-center">
+        <div className="w-full max-w-sm space-y-8">
+          <div className="text-center space-y-3">
+            <div className="inline-flex items-center justify-center w-12 h-12 border border-border/60 mb-2">
+              <Lock className="h-5 w-5 text-primary" />
+            </div>
+            <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-primary">
+              Admin Access
+            </p>
+            <h1 className="font-serif text-3xl tracking-tight text-foreground">
+              Club Lead{" "}
+              <em className="italic font-light text-primary">Management</em>
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Enter the admin password to continue.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground">
+                Password
+              </Label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError(null);
+                }}
+                placeholder="••••••••"
+                autoFocus
+                className="h-10 rounded-sm border-border/60"
+              />
+              {error && (
+                <p className="text-xs text-destructive mt-1">{error}</p>
+              )}
+            </div>
+            <Button
+              type="submit"
+              disabled={verify.isPending || !password}
+              className="w-full rounded-sm text-xs font-semibold tracking-[0.14em] uppercase h-10"
+            >
+              {verify.isPending ? "Checking…" : "Enter"}
+            </Button>
+          </form>
+
+          <div className="text-center">
+            <Button variant="ghost" asChild className="text-xs text-muted-foreground tracking-wider uppercase">
+              <Link href="/membership">← Back to Membership</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
+}
+
+// ─── Club leads panel ─────────────────────────────────────────────────────────
 
 function ClubLeadsPanel({ slug, clubName }: { slug: string; clubName: string }) {
   const qc = useQueryClient();
@@ -190,24 +285,34 @@ function ClubLeadsPanel({ slug, clubName }: { slug: string; clubName: string }) 
   );
 }
 
-export default function Admin() {
+// ─── Admin content ────────────────────────────────────────────────────────────
+
+function AdminContent({ onLock }: { onLock: () => void }) {
   const { data: clubs, isLoading: clubsLoading } = useListClubs();
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
-
   const selectedClub = clubs?.find((c) => c.slug === selectedSlug);
 
   return (
     <Layout>
-      <Button
-        variant="ghost"
-        asChild
-        className="mb-10 -ml-3 text-muted-foreground hover:text-primary text-xs font-semibold tracking-[0.18em] uppercase"
-      >
-        <Link href="/membership">
-          <ArrowLeft className="mr-2 h-3.5 w-3.5" />
-          Back to Membership
-        </Link>
-      </Button>
+      <div className="flex items-center justify-between mb-10">
+        <Button
+          variant="ghost"
+          asChild
+          className="-ml-3 text-muted-foreground hover:text-primary text-xs font-semibold tracking-[0.18em] uppercase"
+        >
+          <Link href="/membership">
+            <ArrowLeft className="mr-2 h-3.5 w-3.5" />
+            Back to Membership
+          </Link>
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={onLock}
+          className="text-muted-foreground hover:text-primary text-xs font-semibold tracking-[0.18em] uppercase"
+        >
+          Lock
+        </Button>
+      </div>
 
       <section className="max-w-4xl mb-12">
         <div className="flex items-center gap-3 mb-4">
@@ -252,9 +357,7 @@ export default function Admin() {
 
         {selectedSlug && selectedClub && (
           <div>
-            <SectionLabel>
-              Leads — {selectedClub.name}
-            </SectionLabel>
+            <SectionLabel>Leads — {selectedClub.name}</SectionLabel>
             <ClubLeadsPanel slug={selectedSlug} clubName={selectedClub.name} />
           </div>
         )}
@@ -270,4 +373,27 @@ export default function Admin() {
       </div>
     </Layout>
   );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export default function Admin() {
+  const [unlocked, setUnlocked] = useState(false);
+
+  useEffect(() => {
+    if (sessionStorage.getItem(SESSION_KEY) === "1") {
+      setUnlocked(true);
+    }
+  }, []);
+
+  function handleLock() {
+    sessionStorage.removeItem(SESSION_KEY);
+    setUnlocked(false);
+  }
+
+  if (!unlocked) {
+    return <PasswordGate onUnlock={() => setUnlocked(true)} />;
+  }
+
+  return <AdminContent onLock={handleLock} />;
 }

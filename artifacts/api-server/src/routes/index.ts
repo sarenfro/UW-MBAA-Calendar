@@ -5,6 +5,7 @@ import eventsRouter from "./events";
 import dashboardRouter from "./dashboard";
 import membersRouter from "./members";
 import clubsRouter from "./clubs";
+import adminRouter from "./admin";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(eventsRouter);
 router.use(dashboardRouter);
 router.use(membersRouter);
 router.use(clubsRouter);
+router.use(adminRouter);
 
 export default router;

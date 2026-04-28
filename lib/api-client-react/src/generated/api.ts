@@ -18,6 +18,8 @@ import type {
 
 import type {
   AddClubLeadBody,
+  AdminVerifyBody,
+  AdminVerifyResponse,
   Calendar,
   Club,
   ClubLead,
@@ -1135,6 +1137,92 @@ export const useRequestRosterAccess = <
   TContext
 > => {
   return useMutation(getRequestRosterAccessMutationOptions(options));
+};
+
+/**
+ * @summary Verify the admin password
+ */
+export const getVerifyAdminPasswordUrl = () => {
+  return `/api/admin/verify`;
+};
+
+export const verifyAdminPassword = async (
+  adminVerifyBody: AdminVerifyBody,
+  options?: RequestInit,
+): Promise<AdminVerifyResponse> => {
+  return customFetch<AdminVerifyResponse>(getVerifyAdminPasswordUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(adminVerifyBody),
+  });
+};
+
+export const getVerifyAdminPasswordMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof verifyAdminPassword>>,
+    TError,
+    { data: BodyType<AdminVerifyBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof verifyAdminPassword>>,
+  TError,
+  { data: BodyType<AdminVerifyBody> },
+  TContext
+> => {
+  const mutationKey = ["verifyAdminPassword"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof verifyAdminPassword>>,
+    { data: BodyType<AdminVerifyBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return verifyAdminPassword(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type VerifyAdminPasswordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof verifyAdminPassword>>
+>;
+export type VerifyAdminPasswordMutationBody = BodyType<AdminVerifyBody>;
+export type VerifyAdminPasswordMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Verify the admin password
+ */
+export const useVerifyAdminPassword = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof verifyAdminPassword>>,
+    TError,
+    { data: BodyType<AdminVerifyBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof verifyAdminPassword>>,
+  TError,
+  { data: BodyType<AdminVerifyBody> },
+  TContext
+> => {
+  return useMutation(getVerifyAdminPasswordMutationOptions(options));
 };
 
 /**

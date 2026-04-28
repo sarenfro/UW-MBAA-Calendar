@@ -20,6 +20,8 @@ tags:
     description: MBAA member lookup operations
   - name: clubs
     description: Club roster and dues operations
+  - name: admin
+    description: Admin operations
 paths:
   /healthz:
     get:
@@ -306,6 +308,31 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Club not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/verify:
+    post:
+      operationId: verifyAdminPassword
+      tags: [admin]
+      summary: Verify the admin password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminVerifyBody"
+      responses:
+        "200":
+          description: Password correct
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminVerifyResponse"
+        "401":
+          description: Wrong password
           content:
             application/json:
               schema:
@@ -929,6 +956,22 @@ components:
         - currentAcademicYear
         - members
         - renewalForecast
+
+    AdminVerifyBody:
+      type: object
+      properties:
+        password:
+          type: string
+      required:
+        - password
+
+    AdminVerifyResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+      required:
+        - ok
 
     ClubLead:
       type: object
