@@ -30,3 +30,6 @@ externalPort = 8081
 [[ports]]
 localPort = 23304
 externalPort = 3000
+
+[nix]
+packages = ["psmisc"]
