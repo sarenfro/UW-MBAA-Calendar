@@ -148,7 +148,7 @@ export function CalendarGrid({
               </div>
 
               <div className="space-y-1 max-h-[calc(100%-2rem)] overflow-y-auto pr-0.5 custom-scrollbar">
-                {dayEvents.slice(0, 4).map((event) => {
+                {dayEvents.map((event) => {
                   const eventStart = new Date(event.startAt);
                   return (
                     <motion.div
@@ -157,7 +157,7 @@ export function CalendarGrid({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2 }}
                       onClick={() => onEventClick(event)}
-                      className="text-[11px] px-1.5 py-1 truncate cursor-pointer transition-colors border-l-2 hover:bg-muted/40"
+                      className="text-[11px] px-1.5 py-1 cursor-pointer transition-colors border-l-2 hover:bg-muted/40 break-words"
                       style={{
                         borderLeftColor: event.calendar.color,
                         backgroundColor: hexToRgba(event.calendar.color, 0.06),
@@ -174,11 +174,6 @@ export function CalendarGrid({
                     </motion.div>
                   );
                 })}
-                {dayEvents.length > 4 && (
-                  <div className="text-[10px] font-semibold tracking-wider uppercase text-muted-foreground pl-1.5 pt-0.5">
-                    + {dayEvents.length - 4} more
-                  </div>
-                )}
               </div>
             </div>
           );
