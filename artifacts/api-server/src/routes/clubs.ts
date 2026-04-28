@@ -293,7 +293,7 @@ router.post("/clubs/:slug/request-access", async (req, res): Promise<void> => {
   });
 
   const APP_BASE_URL = process.env.APP_BASE_URL ?? "http://localhost:80";
-  const magicLink = `${APP_BASE_URL}/membership/lead?token=${token}&club=${slug}`;
+  const magicLink = `${APP_BASE_URL}/membership?token=${token}&club=${slug}`;
 
   if (!process.env.RESEND_API_KEY) {
     req.log.warn(
