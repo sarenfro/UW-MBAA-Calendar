@@ -36,54 +36,45 @@ export function CalendarSidebar({ calendars, hiddenCalendarIds, onToggle, isLoad
   const allHidden = calendars.every(c => hiddenCalendarIds.has(c.id));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="font-serif text-xl tracking-tight text-foreground/90">Calendars</h3>
+        <h3 className="text-xs font-semibold tracking-wider uppercase text-muted-foreground">Calendars</h3>
         {allHidden && (
-          <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+          <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
             All hidden
           </span>
         )}
       </div>
-      
-      <div className="space-y-2">
+
+      <div className="space-y-0.5">
         {calendars.map((calendar) => {
           const isHidden = hiddenCalendarIds.has(calendar.id);
-          const bgRgba = hexToRgba(calendar.color, 0.1);
-          
           return (
             <button
               key={calendar.id}
               onClick={() => onToggle(calendar.id)}
               className={cn(
-                "w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 border",
-                isHidden 
-                  ? "bg-transparent border-transparent hover:bg-muted/50" 
-                  : "bg-card shadow-sm border-border/40 hover:shadow-md hover:border-border/80"
+                "w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md transition-colors text-left",
+                "hover:bg-muted/60"
               )}
             >
-              <div className="flex items-center gap-3 overflow-hidden">
-                <div 
-                  className="w-4 h-4 rounded-full flex-shrink-0 border-2 transition-colors flex items-center justify-center"
-                  style={{ 
-                    borderColor: calendar.color,
-                    backgroundColor: isHidden ? "transparent" : calendar.color
-                  }}
-                >
-                  {!isHidden && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
-                </div>
-                <div className="text-left truncate">
-                  <div className={cn(
-                    "text-sm font-medium truncate transition-colors",
-                    isHidden ? "text-muted-foreground" : "text-foreground"
-                  )}>
-                    {calendar.name}
-                  </div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    {calendar.owner}
-                  </div>
-                </div>
+              <div
+                className="w-3 h-3 rounded-sm flex-shrink-0 border transition-colors flex items-center justify-center"
+                style={{
+                  borderColor: calendar.color,
+                  backgroundColor: isHidden ? "transparent" : calendar.color,
+                }}
+              >
+                {!isHidden && <Check className="w-2 h-2 text-white" strokeWidth={4} />}
               </div>
+              <span
+                className={cn(
+                  "text-sm truncate transition-colors",
+                  isHidden ? "text-muted-foreground line-through decoration-1" : "text-foreground"
+                )}
+              >
+                {calendar.name}
+              </span>
             </button>
           );
         })}
