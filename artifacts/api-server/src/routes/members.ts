@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { asc, desc, eq, ilike, inArray, or } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, or } from "drizzle-orm";
 import { z } from "zod/v4";
 import { db, clubsTable, membersTable, membershipsTable } from "@workspace/db";
 import type { Member } from "@workspace/db";
@@ -15,6 +15,43 @@ function shapeMember(m: Member) {
     classYear: m.classYear,
   };
 }
+
+router.get("/members/directory", async (req, res): Promise<void> => {
+  const params = z
+    .object({
+      q: z.string().optional(),
+      program: z.enum(["full_time", "evening"]).optional(),
+      classYear: z.coerce.number().int().optional(),
+    })
+    .safeParse(req.query);
+
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid parameters" });
+    return;
+  }
+
+  const { q, program, classYear } = params.data;
+  const conditions = [];
+
+  if (q) {
+    conditions.push(
+      or(
+        ilike(membersTable.fullName, `%${q}%`),
+        ilike(membersTable.email, `%${q}%`),
+      ),
+    );
+  }
+  if (program) conditions.push(eq(membersTable.program, program));
+  if (classYear) conditions.push(eq(membersTable.classYear, classYear));
+
+  const rows = await db
+    .select()
+    .from(membersTable)
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(asc(membersTable.fullName));
+
+  res.json(rows.map(shapeMember));
+});
 
 router.get("/members/search", async (req, res): Promise<void> => {
   const q = typeof req.query.q === "string" ? req.query.q.trim() : "";

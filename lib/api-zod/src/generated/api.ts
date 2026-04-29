@@ -29,7 +29,11 @@ export const ListCalendarsResponseItem = zod.object({
     ),
   timezone: zod.string(),
   owner: zod.string().describe("Display name of the calendar owner \/ source"),
-  defaultHidden: zod.boolean(),
+  defaultHidden: zod
+    .boolean()
+    .describe(
+      "If true, this calendar is hidden by default and users must opt in to see it",
+    ),
 });
 export const ListCalendarsResponse = zod.array(ListCalendarsResponseItem);
 
@@ -67,7 +71,11 @@ export const ListEventsResponseItem = zod.object({
     owner: zod
       .string()
       .describe("Display name of the calendar owner \/ source"),
-    defaultHidden: zod.boolean(),
+    defaultHidden: zod
+      .boolean()
+      .describe(
+        "If true, this calendar is hidden by default and users must opt in to see it",
+      ),
   }),
 });
 export const ListEventsResponse = zod.array(ListEventsResponseItem);
@@ -101,7 +109,11 @@ export const GetEventResponse = zod.object({
     owner: zod
       .string()
       .describe("Display name of the calendar owner \/ source"),
-    defaultHidden: zod.boolean(),
+    defaultHidden: zod
+      .boolean()
+      .describe(
+        "If true, this calendar is hidden by default and users must opt in to see it",
+      ),
   }),
 });
 
@@ -143,7 +155,11 @@ export const ListUpcomingEventsResponseItem = zod.object({
     owner: zod
       .string()
       .describe("Display name of the calendar owner \/ source"),
-    defaultHidden: zod.boolean(),
+    defaultHidden: zod
+      .boolean()
+      .describe(
+        "If true, this calendar is hidden by default and users must opt in to see it",
+      ),
   }),
 });
 export const ListUpcomingEventsResponse = zod.array(
@@ -181,7 +197,11 @@ export const GetDashboardSummaryResponse = zod.object({
         owner: zod
           .string()
           .describe("Display name of the calendar owner \/ source"),
-        defaultHidden: zod.boolean(),
+        defaultHidden: zod
+          .boolean()
+          .describe(
+            "If true, this calendar is hidden by default and users must opt in to see it",
+          ),
       }),
     }),
     zod.null(),
@@ -201,7 +221,11 @@ export const GetDashboardSummaryResponse = zod.object({
         owner: zod
           .string()
           .describe("Display name of the calendar owner \/ source"),
-        defaultHidden: zod.boolean(),
+        defaultHidden: zod
+          .boolean()
+          .describe(
+            "If true, this calendar is hidden by default and users must opt in to see it",
+          ),
       }),
       eventCount: zod.number(),
       upcomingCount: zod.number(),
@@ -226,6 +250,26 @@ export const GetMembershipSummaryResponse = zod.object({
     }),
   ),
 });
+
+/**
+ * @summary List all members with optional search and filters
+ */
+export const ListDirectoryMembersQueryParams = zod.object({
+  q: zod.coerce.string().optional().describe("Search by name or email"),
+  program: zod.enum(["full_time", "evening"]).optional(),
+  classYear: zod.coerce.number().optional(),
+});
+
+export const ListDirectoryMembersResponseItem = zod.object({
+  id: zod.string().uuid(),
+  fullName: zod.string(),
+  email: zod.string(),
+  program: zod.enum(["full_time", "evening"]),
+  classYear: zod.number(),
+});
+export const ListDirectoryMembersResponse = zod.array(
+  ListDirectoryMembersResponseItem,
+);
 
 /**
  * @summary Search members by name or email (max 20 results)

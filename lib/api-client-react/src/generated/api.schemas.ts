@@ -253,6 +253,23 @@ export type ListUpcomingEventsParams = {
   limit?: number;
 };
 
+export type ListDirectoryMembersParams = {
+  /**
+   * Search by name or email
+   */
+  q?: string;
+  program?: ListDirectoryMembersProgram;
+  classYear?: number;
+};
+
+export type ListDirectoryMembersProgram =
+  (typeof ListDirectoryMembersProgram)[keyof typeof ListDirectoryMembersProgram];
+
+export const ListDirectoryMembersProgram = {
+  full_time: "full_time",
+  evening: "evening",
+} as const;
+
 export type SearchMembersParams = {
   q: string;
 };

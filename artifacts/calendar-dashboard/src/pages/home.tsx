@@ -119,7 +119,7 @@ export default function Home() {
           <em className="italic font-light text-primary">go</em>
         </h2>
 
-        <div className="grid grid-cols-1 gap-px bg-border/60 border border-border/60">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-border/60 border border-border/60">
           <Link
             href="/membership"
             className="group bg-background hover:bg-card transition-colors p-5 flex flex-col gap-2 min-h-[90px]"
@@ -132,6 +132,21 @@ export default function Home() {
             </h3>
             <div className="flex items-center justify-between text-sm text-muted-foreground group-hover:text-primary transition-colors">
               <span>find out what clubs you registered for</span>
+              <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </div>
+          </Link>
+          <Link
+            href="/directory"
+            className="group bg-background hover:bg-card transition-colors p-5 flex flex-col gap-2 min-h-[90px]"
+          >
+            <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-primary">
+              02 · Directory
+            </p>
+            <h3 className="font-serif text-2xl tracking-tight leading-tight flex-1">
+              Student <em className="italic font-light">Directory</em>
+            </h3>
+            <div className="flex items-center justify-between text-sm text-muted-foreground group-hover:text-primary transition-colors">
+              <span>browse and connect with your cohort</span>
               <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </div>
           </Link>

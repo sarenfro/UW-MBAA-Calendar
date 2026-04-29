@@ -7,6 +7,7 @@ import Home from "@/pages/home";
 import EventDetail from "@/pages/event-detail";
 import Membership from "@/pages/membership";
 import Admin from "@/pages/admin";
+import Directory from "@/pages/directory";
 
 const queryClient = new QueryClient();
 
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/event/:id" component={EventDetail} />
       <Route path="/membership" component={Membership} />
       <Route path="/admin" component={Admin} />
+      <Route path="/directory" component={Directory} />
       <Route component={NotFound} />
     </Switch>
   );

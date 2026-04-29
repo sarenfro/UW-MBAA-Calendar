@@ -24,6 +24,8 @@ export * from "./expiringMember";
 export * from "./getClubRosterParams";
 export * from "./healthStatus";
 export * from "./lapsedMember";
+export * from "./listDirectoryMembersParams";
+export * from "./listDirectoryMembersProgram";
 export * from "./listEventsParams";
 export * from "./listUpcomingEventsParams";
 export * from "./member";

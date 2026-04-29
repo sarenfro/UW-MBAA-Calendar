@@ -31,6 +31,7 @@ import type {
   Event,
   GetClubRosterParams,
   HealthStatus,
+  ListDirectoryMembersParams,
   ListEventsParams,
   ListUpcomingEventsParams,
   Member,
@@ -707,6 +708,106 @@ export function useGetMembershipSummary<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetMembershipSummaryQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List all members with optional search and filters
+ */
+export const getListDirectoryMembersUrl = (
+  params?: ListDirectoryMembersParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/members/directory?${stringifiedParams}`
+    : `/api/members/directory`;
+};
+
+export const listDirectoryMembers = async (
+  params?: ListDirectoryMembersParams,
+  options?: RequestInit,
+): Promise<Member[]> => {
+  return customFetch<Member[]>(getListDirectoryMembersUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListDirectoryMembersQueryKey = (
+  params?: ListDirectoryMembersParams,
+) => {
+  return [`/api/members/directory`, ...(params ? [params] : [])] as const;
+};
+
+export const getListDirectoryMembersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listDirectoryMembers>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListDirectoryMembersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listDirectoryMembers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListDirectoryMembersQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listDirectoryMembers>>
+  > = ({ signal }) =>
+    listDirectoryMembers(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listDirectoryMembers>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListDirectoryMembersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listDirectoryMembers>>
+>;
+export type ListDirectoryMembersQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all members with optional search and filters
+ */
+
+export function useListDirectoryMembers<
+  TData = Awaited<ReturnType<typeof listDirectoryMembers>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListDirectoryMembersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listDirectoryMembers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListDirectoryMembersQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
