@@ -1,6 +1,6 @@
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import * as XLSX from "xlsx";
+import XLSX from "xlsx";
 import { db, membersTable } from "@workspace/db";
 import { sql } from "drizzle-orm";
 
