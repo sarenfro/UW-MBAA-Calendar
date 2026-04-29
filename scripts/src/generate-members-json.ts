@@ -42,6 +42,22 @@ for (const sheetName of wb.SheetNames) {
   console.log(`  ${sheetName}: ${count} members`);
 }
 
+// Deduplicate: email wins; then linkedin_url; then name+program+year
+const seenEmails = new Set<string>();
+const seenLinkedins = new Set<string>();
+const deduped: MemberRecord[] = [];
+for (const m of members) {
+  if (m.email) {
+    if (seenEmails.has(m.email)) continue;
+    seenEmails.add(m.email);
+  }
+  if (m.linkedinUrl) {
+    if (seenLinkedins.has(m.linkedinUrl)) { m.linkedinUrl = null; }
+    else { seenLinkedins.add(m.linkedinUrl); }
+  }
+  deduped.push(m);
+}
+
 const outPath = join(__dirname, "../../artifacts/api-server/src/lib/members-seed.json");
-writeFileSync(outPath, JSON.stringify(members, null, 2));
-console.log(`\nWrote ${members.length} members to members-seed.json`);
+writeFileSync(outPath, JSON.stringify(deduped, null, 2));
+console.log(`\nWrote ${deduped.length} members to members-seed.json (deduplicated from ${members.length})`);

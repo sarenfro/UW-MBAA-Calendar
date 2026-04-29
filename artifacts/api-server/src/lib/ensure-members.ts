@@ -16,30 +16,33 @@ const MEMBERS = membersSeedData as MemberSeedRecord[];
 const BATCH_SIZE = 100;
 
 export async function ensureMembers(): Promise<void> {
+  // Fetch all existing members once upfront.
   const existing = await db
     .select({ email: membersTable.email, linkedinUrl: membersTable.linkedinUrl })
     .from(membersTable);
 
-  const existingEmails = new Set(existing.map((r) => r.email).filter(Boolean) as string[]);
-  const existingLinkedins = new Set(
-    existing.map((r) => r.linkedinUrl).filter(Boolean) as string[],
+  // Build a set of linkedin_urls already committed in DB (keyed by members
+  // that are NOT in our seed-by-email set, so we avoid false conflicts).
+  const seedEmailSet = new Set(MEMBERS.map((m) => m.email).filter(Boolean) as string[]);
+  const takenLinkedins = new Set(
+    existing
+      .filter((r) => r.linkedinUrl && (!r.email || !seedEmailSet.has(r.email)))
+      .map((r) => r.linkedinUrl as string),
   );
 
-  const withEmail = MEMBERS.filter(
-    (m) => m.email && !existingEmails.has(m.email),
+  const withEmail = MEMBERS.filter((m) => m.email != null).map((m) => ({
+    ...m,
+    // Null out linkedin_url if it's already claimed by a member outside our upsert set.
+    linkedinUrl: m.linkedinUrl && takenLinkedins.has(m.linkedinUrl) ? null : m.linkedinUrl,
+  }));
+
+  const withLinkedinOnly = MEMBERS.filter(
+    (m) => m.email == null && m.linkedinUrl != null,
   );
-  const withLinkedin = MEMBERS.filter(
-    (m) => !m.email && m.linkedinUrl && !existingLinkedins.has(m.linkedinUrl),
-  );
-  const noKey = MEMBERS.filter((m) => !m.email && !m.linkedinUrl);
+  const noKey = MEMBERS.filter((m) => m.email == null && m.linkedinUrl == null);
 
-  const totalNew = withEmail.length + withLinkedin.length + noKey.length;
-
-  if (totalNew === 0) {
-    logger.info({ total: existing.length }, "ensureMembers: all members present");
-    return;
-  }
-
+  // Upsert all members with an email — inserts new ones AND updates
+  // linkedinUrl on existing ones so LinkedIn links stay current.
   for (let i = 0; i < withEmail.length; i += BATCH_SIZE) {
     await db
       .insert(membersTable)
@@ -56,10 +59,11 @@ export async function ensureMembers(): Promise<void> {
       });
   }
 
-  for (let i = 0; i < withLinkedin.length; i += BATCH_SIZE) {
+  // Upsert members who only have a LinkedIn URL (no email).
+  for (let i = 0; i < withLinkedinOnly.length; i += BATCH_SIZE) {
     await db
       .insert(membersTable)
-      .values(withLinkedin.slice(i, i + BATCH_SIZE))
+      .values(withLinkedinOnly.slice(i, i + BATCH_SIZE))
       .onConflictDoUpdate({
         target: membersTable.linkedinUrl,
         set: {
@@ -71,14 +75,19 @@ export async function ensureMembers(): Promise<void> {
       });
   }
 
+  // Members with neither email nor LinkedIn — only insert once.
   if (noKey.length > 0) {
-    for (let i = 0; i < noKey.length; i += BATCH_SIZE) {
-      await db.insert(membersTable).values(noKey.slice(i, i + BATCH_SIZE));
+    const existingNames = new Set(
+      existing.filter((r) => !r.email && !r.linkedinUrl).map(() => ""),
+    );
+    const toInsert = noKey.filter((m) => !existingNames.has(m.fullName));
+    for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
+      await db.insert(membersTable).values(toInsert.slice(i, i + BATCH_SIZE));
     }
   }
 
   logger.info(
-    { byEmail: withEmail.length, byLinkedin: withLinkedin.length, noKey: noKey.length },
-    `ensureMembers: inserted ${totalNew} missing member(s)`,
+    { withEmail: withEmail.length, withLinkedinOnly: withLinkedinOnly.length, noKey: noKey.length },
+    "ensureMembers: sync complete",
   );
 }
