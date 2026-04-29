@@ -542,6 +542,9 @@ components:
         owner:
           type: string
           description: Display name of the calendar owner / source
+        defaultHidden:
+          type: boolean
+          description: If true, this calendar is hidden by default and users must opt in to see it
       required:
         - id
         - name
@@ -549,6 +552,7 @@ components:
         - color
         - timezone
         - owner
+        - defaultHidden
 
     Event:
       type: object

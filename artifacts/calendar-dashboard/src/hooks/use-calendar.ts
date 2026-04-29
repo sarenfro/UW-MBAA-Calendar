@@ -1,9 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useListCalendars } from "@workspace/api-client-react";
 
 export function useCalendarFilters() {
   const { data: calendars } = useListCalendars();
   const [hiddenCalendarIds, setHiddenCalendarIds] = useState<Set<number>>(new Set());
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    if (calendars && !initialized) {
+      setHiddenCalendarIds(new Set(calendars.filter((c) => c.defaultHidden).map((c) => c.id)));
+      setInitialized(true);
+    }
+  }, [calendars, initialized]);
 
   const toggleCalendar = (id: number) => {
     setHiddenCalendarIds((prev) => {

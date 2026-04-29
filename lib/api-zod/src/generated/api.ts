@@ -29,6 +29,7 @@ export const ListCalendarsResponseItem = zod.object({
     ),
   timezone: zod.string(),
   owner: zod.string().describe("Display name of the calendar owner \/ source"),
+  defaultHidden: zod.boolean(),
 });
 export const ListCalendarsResponse = zod.array(ListCalendarsResponseItem);
 
@@ -66,6 +67,7 @@ export const ListEventsResponseItem = zod.object({
     owner: zod
       .string()
       .describe("Display name of the calendar owner \/ source"),
+    defaultHidden: zod.boolean(),
   }),
 });
 export const ListEventsResponse = zod.array(ListEventsResponseItem);
@@ -99,6 +101,7 @@ export const GetEventResponse = zod.object({
     owner: zod
       .string()
       .describe("Display name of the calendar owner \/ source"),
+    defaultHidden: zod.boolean(),
   }),
 });
 
@@ -140,6 +143,7 @@ export const ListUpcomingEventsResponseItem = zod.object({
     owner: zod
       .string()
       .describe("Display name of the calendar owner \/ source"),
+    defaultHidden: zod.boolean(),
   }),
 });
 export const ListUpcomingEventsResponse = zod.array(
@@ -177,6 +181,7 @@ export const GetDashboardSummaryResponse = zod.object({
         owner: zod
           .string()
           .describe("Display name of the calendar owner \/ source"),
+        defaultHidden: zod.boolean(),
       }),
     }),
     zod.null(),
@@ -196,6 +201,7 @@ export const GetDashboardSummaryResponse = zod.object({
         owner: zod
           .string()
           .describe("Display name of the calendar owner \/ source"),
+        defaultHidden: zod.boolean(),
       }),
       eventCount: zod.number(),
       upcomingCount: zod.number(),

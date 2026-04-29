@@ -16,4 +16,6 @@ export interface Calendar {
   timezone: string;
   /** Display name of the calendar owner / source */
   owner: string;
+  /** If true, this calendar is hidden by default and users must opt in to see it */
+  defaultHidden: boolean;
 }
