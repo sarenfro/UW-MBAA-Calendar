@@ -10,9 +10,10 @@ function shapeMember(m: Member) {
   return {
     id: m.id,
     fullName: m.fullName,
-    email: m.email,
+    email: m.email ?? null,
     program: m.program,
     classYear: m.classYear,
+    linkedinUrl: m.linkedinUrl ?? null,
   };
 }
 

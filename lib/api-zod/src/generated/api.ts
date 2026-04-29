@@ -263,9 +263,10 @@ export const ListDirectoryMembersQueryParams = zod.object({
 export const ListDirectoryMembersResponseItem = zod.object({
   id: zod.string().uuid(),
   fullName: zod.string(),
-  email: zod.string(),
+  email: zod.string().nullable(),
   program: zod.enum(["full_time", "evening"]),
   classYear: zod.number(),
+  linkedinUrl: zod.string().nullable(),
 });
 export const ListDirectoryMembersResponse = zod.array(
   ListDirectoryMembersResponseItem,
@@ -281,9 +282,10 @@ export const SearchMembersQueryParams = zod.object({
 export const SearchMembersResponseItem = zod.object({
   id: zod.string().uuid(),
   fullName: zod.string(),
-  email: zod.string(),
+  email: zod.string().nullable(),
   program: zod.enum(["full_time", "evening"]),
   classYear: zod.number(),
+  linkedinUrl: zod.string().nullable(),
 });
 export const SearchMembersResponse = zod.array(SearchMembersResponseItem);
 
@@ -298,9 +300,10 @@ export const GetMemberMembershipsResponse = zod.object({
   member: zod.object({
     id: zod.string().uuid(),
     fullName: zod.string(),
-    email: zod.string(),
+    email: zod.string().nullable(),
     program: zod.enum(["full_time", "evening"]),
     classYear: zod.number(),
+    linkedinUrl: zod.string().nullable(),
   }),
   memberships: zod.array(
     zod.object({

@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Search, Mail, Users } from "lucide-react";
+import { ArrowLeft, Search, Mail, Users, Linkedin } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -70,13 +70,28 @@ function MemberCard({ member }: { member: Member }) {
             {fmtProgram(member.program)}
           </span>
         </div>
-        <a
-          href={`mailto:${member.email}`}
-          className="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors w-fit"
-        >
-          <Mail className="h-3 w-3 flex-shrink-0" />
-          <span className="truncate">{member.email}</span>
-        </a>
+        <div className="mt-2 flex flex-col gap-1">
+          {member.email && (
+            <a
+              href={`mailto:${member.email}`}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors w-fit"
+            >
+              <Mail className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate">{member.email}</span>
+            </a>
+          )}
+          {member.linkedinUrl && (
+            <a
+              href={member.linkedinUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-[#0A66C2] transition-colors w-fit"
+            >
+              <Linkedin className="h-3 w-3 flex-shrink-0" />
+              <span>LinkedIn</span>
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -198,7 +213,7 @@ export default function Directory() {
       list = list.filter(
         (m) =>
           m.fullName.toLowerCase().includes(q) ||
-          m.email.toLowerCase().includes(q),
+          (m.email ?? "").toLowerCase().includes(q),
       );
     }
     if (program !== "all") list = list.filter((m) => m.program === program);

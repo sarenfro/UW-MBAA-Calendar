@@ -10,7 +10,8 @@ import type { MemberProgram } from "./memberProgram";
 export interface Member {
   id: string;
   fullName: string;
-  email: string;
+  email: string | null;
   program: MemberProgram;
   classYear: number;
+  linkedinUrl: string | null;
 }

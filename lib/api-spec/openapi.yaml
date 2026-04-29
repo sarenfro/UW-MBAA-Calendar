@@ -712,17 +712,22 @@ components:
           type: string
         email:
           type: string
+          nullable: true
         program:
           type: string
           enum: [full_time, evening]
         classYear:
           type: integer
+        linkedinUrl:
+          type: string
+          nullable: true
       required:
         - id
         - fullName
         - email
         - program
         - classYear
+        - linkedinUrl
 
     MembershipRecord:
       type: object
