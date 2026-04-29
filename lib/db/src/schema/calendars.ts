@@ -1,4 +1,4 @@
-import { pgTable, text, serial } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -10,6 +10,7 @@ export const calendarsTable = pgTable("calendars", {
   timezone: text("timezone").notNull().default("UTC"),
   owner: text("owner").notNull(),
   subscriptionUrl: text("subscription_url"),
+  defaultHidden: boolean("default_hidden").notNull().default(false),
 });
 
 export const insertCalendarSchema = createInsertSchema(calendarsTable).omit({

@@ -6,6 +6,15 @@ function googleIcsUrl(calendarId: string): string {
 
 const calendars = [
   {
+    name: "UW Foster Undergraduate Events",
+    description: "Events from the UW Foster School of Business undergraduate calendar.",
+    color: "#85754D",
+    timezone: "America/Los_Angeles",
+    owner: "UW Foster School of Business",
+    subscriptionUrl: "https://www.trumba.com/calendars/sea_foster.ics",
+    defaultHidden: true,
+  },
+  {
     name: "Business & Policy",
     description: "Business law, policy trends, and regulatory environment discussions.",
     color: "#1E40AF",
@@ -245,6 +254,7 @@ async function main(): Promise<void> {
       timezone: c.timezone,
       owner: c.owner,
       subscriptionUrl: c.subscriptionUrl,
+      defaultHidden: "defaultHidden" in c ? c.defaultHidden : false,
     })),
   );
 
