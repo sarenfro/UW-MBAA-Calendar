@@ -64,7 +64,7 @@ export function CalendarSidebar({
 
       <div className="space-y-0.5 pt-1">
         {[...calendars]
-          .sort((a, b) => Number(a.defaultHidden) - Number(b.defaultHidden))
+          .sort((a, b) => Number(a.defaultHidden ?? false) - Number(b.defaultHidden ?? false))
           .map((calendar) => {
           const isHidden = hiddenCalendarIds.has(calendar.id);
           return (
