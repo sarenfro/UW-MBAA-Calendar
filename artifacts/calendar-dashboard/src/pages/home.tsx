@@ -119,7 +119,7 @@ export default function Home() {
           <em className="italic font-light text-primary">go</em>
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border/60 border border-border/60">
+        <div className="grid grid-cols-1 gap-px bg-border/60 border border-border/60">
           <Link
             href="/membership"
             className="group bg-background hover:bg-card transition-colors p-5 flex flex-col gap-2 min-h-[90px]"
