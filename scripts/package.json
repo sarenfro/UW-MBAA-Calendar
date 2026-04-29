@@ -8,6 +8,7 @@
     "seed-calendars": "tsx ./src/seed-calendars.ts",
     "seed-members": "tsx ./src/seed-members.ts",
     "sync-calendars": "tsx ./src/sync-calendars.ts",
+    "import-members-xlsx": "tsx ./src/import-members-xlsx.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
@@ -16,6 +17,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "tsx": "catalog:"
+    "tsx": "catalog:",
+    "xlsx": "^0.18.5"
   }
 }

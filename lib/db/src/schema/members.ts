@@ -6,10 +6,11 @@ export const programEnum = pgEnum("program", ["full_time", "evening"]);
 
 export const membersTable = pgTable("members", {
   id: uuid("id").primaryKey().defaultRandom(),
-  email: text("email").notNull().unique(),
+  email: text("email").unique(),
   fullName: text("full_name").notNull(),
   program: programEnum("program").notNull(),
   classYear: integer("class_year").notNull(),
+  linkedinUrl: text("linkedin_url").unique(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
