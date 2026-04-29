@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { ensureCalendars } from "./lib/ensure-calendars";
+import { ensureMembers } from "./lib/ensure-members";
 
 const rawPort = process.env["PORT"];
 
@@ -18,6 +19,7 @@ if (Number.isNaN(port) || port <= 0) {
 
 async function start(): Promise<void> {
   await ensureCalendars();
+  await ensureMembers();
 
   app.listen(port, (err) => {
     if (err) {

@@ -9,7 +9,8 @@
     "seed-members": "tsx ./src/seed-members.ts",
     "sync-calendars": "tsx ./src/sync-calendars.ts",
     "import-members-xlsx": "tsx ./src/import-members-xlsx.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "generate-members-json": "tsx ./src/generate-members-json.ts"
   },
   "dependencies": {
     "@workspace/db": "workspace:*",

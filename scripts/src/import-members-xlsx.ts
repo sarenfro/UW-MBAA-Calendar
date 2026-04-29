@@ -65,8 +65,14 @@ async function main(): Promise<void> {
       const fullName = [firstName, lastName].filter(Boolean).join(" ");
       if (!fullName) continue;
 
-      const email = (row["Email"] as string | undefined)?.trim() || null;
-      const linkedinUrl = (row["LinkedIn"] as string | undefined)?.trim() || null;
+      const rawEmail = (row["Email"] as string | undefined)?.trim() ?? "";
+      const email = rawEmail && rawEmail.toLowerCase() !== "n/a" ? rawEmail : null;
+
+      const rawLinkedin = (row["LinkedIn"] as string | undefined)?.trim() ?? "";
+      const linkedinUrl =
+        rawLinkedin && rawLinkedin.toLowerCase() !== "n/a" && rawLinkedin.startsWith("http")
+          ? rawLinkedin
+          : null;
 
       const record: MemberRecord = {
         email,
