@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Trash2, Plus, ShieldAlert, Lock } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, ShieldAlert, Lock, RefreshCw } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,7 +53,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 // ─── Password gate ────────────────────────────────────────────────────────────
 
-function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
+function PasswordGate({ onUnlock }: { onUnlock: (pw: string) => void }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -63,7 +63,7 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
       onSuccess: (data) => {
         if (data.ok) {
           sessionStorage.setItem(SESSION_KEY, "1");
-          onUnlock();
+          onUnlock(password);
         } else {
           setError("Incorrect password.");
         }
@@ -287,10 +287,33 @@ function ClubLeadsPanel({ slug, clubName }: { slug: string; clubName: string }) 
 
 // ─── Admin content ────────────────────────────────────────────────────────────
 
-function AdminContent({ onLock }: { onLock: () => void }) {
+function AdminContent({ onLock, password }: { onLock: () => void; password: string }) {
   const { data: clubs, isLoading: clubsLoading } = useListClubs();
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const selectedClub = clubs?.find((c) => c.slug === selectedSlug);
+  const { toast } = useToast();
+
+  const [syncing, setSyncing] = useState(false);
+  async function handleSync() {
+    setSyncing(true);
+    try {
+      const res = await fetch("/api/admin/sync-calendars", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json() as { ok?: boolean; totalEvents?: number; error?: string };
+      if (data.ok) {
+        toast({ title: "Sync complete", description: `${data.totalEvents?.toLocaleString()} events refreshed across all calendars.` });
+      } else {
+        toast({ title: "Sync failed", description: data.error ?? "Unknown error", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Sync failed", description: "Network error", variant: "destructive" });
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   return (
     <Layout>
@@ -336,6 +359,30 @@ function AdminContent({ onLock }: { onLock: () => void }) {
 
       <div className="max-w-3xl space-y-10">
         <div>
+          <SectionLabel>Calendar Data</SectionLabel>
+          <div className="border border-border/60 p-5 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-foreground">Sync all calendars</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Fetches the latest events from all ICS feeds and refreshes the database. Takes ~30 seconds.
+              </p>
+            </div>
+            <Button
+              onClick={handleSync}
+              disabled={syncing}
+              variant="outline"
+              size="sm"
+              className="rounded-sm shrink-0 text-xs font-semibold tracking-[0.14em] uppercase gap-1.5 border-border/60"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? "Syncing…" : "Sync Now"}
+            </Button>
+          </div>
+        </div>
+
+        <Separator />
+
+        <div>
           <SectionLabel>Select a club</SectionLabel>
           {clubsLoading ? (
             <Skeleton className="h-9 w-64" />
@@ -379,6 +426,7 @@ function AdminContent({ onLock }: { onLock: () => void }) {
 
 export default function Admin() {
   const [unlocked, setUnlocked] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
 
   useEffect(() => {
     if (sessionStorage.getItem(SESSION_KEY) === "1") {
@@ -389,11 +437,19 @@ export default function Admin() {
   function handleLock() {
     sessionStorage.removeItem(SESSION_KEY);
     setUnlocked(false);
+    setAdminPassword("");
   }
 
   if (!unlocked) {
-    return <PasswordGate onUnlock={() => setUnlocked(true)} />;
+    return (
+      <PasswordGate
+        onUnlock={(pw) => {
+          setAdminPassword(pw);
+          setUnlocked(true);
+        }}
+      />
+    );
   }
 
-  return <AdminContent onLock={handleLock} />;
+  return <AdminContent onLock={handleLock} password={adminPassword} />;
 }
