@@ -64,15 +64,6 @@ export default function Home() {
           commitments — together in one place. Click any event to see the source
           and add it to your own calendar.
         </p>
-        <div className="mt-5 flex">
-          <Link
-            href="/admin"
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border/50 text-[11px] font-medium text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors"
-          >
-            <ShieldAlert className="h-3 w-3" />
-            Exec Admin
-          </Link>
-        </div>
       </section>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
         <aside className="lg:col-span-3 space-y-10">
@@ -173,6 +164,15 @@ export default function Home() {
               <span>files and resources shared by the executive team</span>
               <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </div>
+          </Link>
+        </div>
+        <div className="mt-8 flex justify-center">
+          <Link
+            href="/admin"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border/50 text-[11px] font-medium text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors"
+          >
+            <ShieldAlert className="h-3 w-3" />
+            Exec Admin
           </Link>
         </div>
       </section>
