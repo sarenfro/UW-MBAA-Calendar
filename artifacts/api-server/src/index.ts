@@ -2,6 +2,7 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { ensureCalendars } from "./lib/ensure-calendars";
 import { ensureMembers } from "./lib/ensure-members";
+import { syncAllCalendars } from "./lib/sync-calendars";
 
 const rawPort = process.env["PORT"];
 
@@ -17,6 +18,20 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
+const SYNC_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+
+async function runScheduledSync(): Promise<void> {
+  logger.info("scheduledSync: starting");
+  try {
+    const results = await syncAllCalendars();
+    const totalEvents = results.reduce((sum, r) => sum + r.events, 0);
+    const skipped = results.filter((r) => r.skipped).map((r) => r.calendar);
+    logger.info({ totalEvents, skipped }, "scheduledSync: complete");
+  } catch (err) {
+    logger.error({ err }, "scheduledSync: failed");
+  }
+}
+
 async function start(): Promise<void> {
   await ensureCalendars();
   await ensureMembers();
@@ -28,6 +43,10 @@ async function start(): Promise<void> {
     }
 
     logger.info({ port }, "Server listening");
+
+    // Run an immediate sync on startup, then repeat every hour.
+    runScheduledSync();
+    setInterval(runScheduledSync, SYNC_INTERVAL_MS);
   });
 }
 
