@@ -5,6 +5,7 @@ function googleIcsUrl(calendarId: string): string {
 }
 
 const calendars = [
+  { name: "UW Foster MBAA", description: null, color: "#E8A217", timezone: "America/Los_Angeles", owner: "uwmbaacalendar@gmail.com", subscriptionUrl: googleIcsUrl("uwmbaacalendar@gmail.com") },
   {
     name: "UW Foster Undergraduate Events",
     description: "Events from the UW Foster School of Business undergraduate calendar.",
