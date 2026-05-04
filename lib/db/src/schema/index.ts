@@ -5,3 +5,6 @@ export * from "./clubs";
 export * from "./memberships";
 export * from "./club_leads";
 export * from "./lead_access_tokens";
+export * from "./doc_exec_tokens";
+export * from "./doc_folders";
+export * from "./doc_files";

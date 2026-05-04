@@ -159,6 +159,21 @@ export default function Home() {
               <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </div>
           </Link>
+          <Link
+            href="/documents"
+            className="group bg-background hover:bg-card transition-colors p-5 flex flex-col gap-2 min-h-[90px] md:col-span-2"
+          >
+            <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-primary">
+              03 · Resources
+            </p>
+            <h3 className="font-serif text-2xl tracking-tight leading-tight flex-1">
+              Document <em className="italic font-light">Library</em>
+            </h3>
+            <div className="flex items-center justify-between text-sm text-muted-foreground group-hover:text-primary transition-colors">
+              <span>files and resources shared by the executive team</span>
+              <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </div>
+          </Link>
         </div>
       </section>
       <EventDialog
