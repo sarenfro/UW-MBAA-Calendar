@@ -29,8 +29,12 @@ export default function Home() {
     visibleCalendarIdsString,
   } = useCalendarFilters();
 
-  const { data: upcomingEvents, isLoading: isLoadingUpcoming } =
-    useListUpcomingEvents({ limit: 5 });
+  const { data: upcomingEventsRaw, isLoading: isLoadingUpcoming } =
+    useListUpcomingEvents({ limit: 15 });
+
+  const upcomingEvents = upcomingEventsRaw
+    ?.filter((e) => !hiddenCalendarIds.has(e.calendar.id))
+    .slice(0, 5);
 
   const eventsParams = {
     start: monthStart.toISOString(),
