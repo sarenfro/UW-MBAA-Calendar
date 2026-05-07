@@ -34,6 +34,7 @@ export default function Home() {
 
   const upcomingEvents = upcomingEventsRaw
     ?.filter((e) => !hiddenCalendarIds.has(e.calendar.id))
+    .filter((e) => e.calendar.name !== "UW Foster Undergraduate Events")
     .slice(0, 5);
 
   const eventsParams = {
