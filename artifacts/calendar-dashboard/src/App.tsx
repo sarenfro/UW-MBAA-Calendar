@@ -9,6 +9,8 @@ import Membership from "@/pages/membership";
 import Admin from "@/pages/admin";
 import Directory from "@/pages/directory";
 import Documents from "@/pages/documents";
+import Tickets from "@/pages/tickets";
+import TicketsDashboard from "@/pages/tickets-dashboard";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +23,8 @@ function Router() {
       <Route path="/admin" component={Admin} />
       <Route path="/directory" component={Directory} />
       <Route path="/documents" component={Documents} />
+      <Route path="/tickets" component={Tickets} />
+      <Route path="/tickets/dashboard" component={TicketsDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

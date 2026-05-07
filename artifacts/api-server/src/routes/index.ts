@@ -7,6 +7,7 @@ import membersRouter from "./members";
 import clubsRouter from "./clubs";
 import adminRouter from "./admin";
 import documentsRouter from "./documents";
+import ticketsRouter from "./tickets";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(membersRouter);
 router.use(clubsRouter);
 router.use(adminRouter);
 router.use(documentsRouter);
+router.use(ticketsRouter);
 
 export default router;

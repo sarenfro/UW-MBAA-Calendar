@@ -152,7 +152,7 @@ export default function Home() {
           </Link>
           <Link
             href="/documents"
-            className="group bg-background hover:bg-card transition-colors p-5 flex flex-col gap-2 min-h-[90px] md:col-span-2"
+            className="group bg-background hover:bg-card transition-colors p-5 flex flex-col gap-2 min-h-[90px]"
           >
             <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-primary">
               03 · Resources
@@ -162,6 +162,21 @@ export default function Home() {
             </h3>
             <div className="flex items-center justify-between text-sm text-muted-foreground group-hover:text-primary transition-colors">
               <span>files and resources shared by the executive team</span>
+              <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </div>
+          </Link>
+          <Link
+            href="/tickets"
+            className="group bg-background hover:bg-card transition-colors p-5 flex flex-col gap-2 min-h-[90px]"
+          >
+            <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-primary">
+              04 · Support
+            </p>
+            <h3 className="font-serif text-2xl tracking-tight leading-tight flex-1">
+              Submit a <em className="italic font-light">Ticket</em>
+            </h3>
+            <div className="flex items-center justify-between text-sm text-muted-foreground group-hover:text-primary transition-colors">
+              <span>escalate issues to the VP of Technology</span>
               <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </div>
           </Link>

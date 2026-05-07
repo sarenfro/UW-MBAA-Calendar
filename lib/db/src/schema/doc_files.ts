@@ -5,6 +5,12 @@ const bytea = customType<{ data: Buffer; driverData: Buffer }>({
   dataType() {
     return "bytea";
   },
+  toDriver(value: Buffer): Buffer {
+    return Buffer.isBuffer(value) ? value : Buffer.from(value);
+  },
+  fromDriver(value: Buffer): Buffer {
+    return Buffer.isBuffer(value) ? value : Buffer.from(value as unknown as ArrayBuffer);
+  },
 });
 
 export const docFilesTable = pgTable("doc_files", {
