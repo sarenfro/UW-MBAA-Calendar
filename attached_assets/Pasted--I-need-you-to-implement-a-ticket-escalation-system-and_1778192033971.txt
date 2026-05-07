@@ -1,0 +1,109 @@
+ I need you to implement a ticket escalation system and fix a file upload bug. Here's everything to do:                
+                                                                                                                        
+  ---                    
+                                                                                                                        
+  ## 1. Fix the file upload bug on the MBAA Resources page                                                              
+                           
+  In `lib/db/src/schema/doc_files.ts`, update the `bytea` custom type to include explicit serialization:                
+                                         
+  ```ts                                                                                                                 
+  const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+    dataType() { return "bytea"; },                                                                                     
+    toDriver(value: Buffer): Buffer {
+      return Buffer.isBuffer(value) ? value : Buffer.from(value);                                                       
+    },                                   
+    fromDriver(value: Buffer): Buffer {                                                                                 
+      return Buffer.isBuffer(value) ? value : Buffer.from(value as unknown as ArrayBuffer);                             
+    },                        
+  });                                                                                                                   
+                                         
+  In artifacts/api-server/src/app.ts, add a JSON error handler as the last middleware (after app.use("/api", router)):  
+                              
+  import express, { type Express, type Request, type Response, type NextFunction } from "express";                      
+  // ... existing imports ...                                                                                           
+                              
+  // Add after app.use("/api", router):                                                                                 
+  app.use((err: Error & { status?: number; code?: string }, _req: Request, res: Response, _next: NextFunction) => {
+    const status = err.status ?? 500;                                                                                   
+    const message = err.code === "LIMIT_FILE_SIZE"
+      ? "File is too large. Maximum size is 50 MB."                                                                     
+      : err.message ?? "Internal server error";
+    logger.error({ err }, "unhandled error");                                                                           
+    res.status(status).json({ error: message });                                                                        
+  });                         
+                                                                                                                        
+  ---                                    
+  2. Add a ticket escalation system (like JIRA)
+                                                                                                                        
+  DB Schema — create two new files:
+                                                                                                                        
+  lib/db/src/schema/tickets.ts           
+  - tickets table: uuid id (PK), text title (not null), text description (not null), enum category                      
+  (general|technology|event|financial|other, default general), enum status (open|in_progress|resolved, default open),   
+  text submitter_email (not null), text submitter_name (not null), timestamps created_at and updated_at
+                                                                                                                        
+  lib/db/src/schema/ticket_messages.ts   
+  - ticket_messages table: uuid id (PK), uuid ticket_id (FK → tickets.id, cascade delete), text sender_email (not null),
+   text sender_name (not null), boolean is_vp (not null, default false), text content (not null), timestamp created_at  
+                                                                                                                      
+  Export both from lib/db/src/schema/index.ts.                                                                          
+                                                                                                                        
+  API Routes — create artifacts/api-server/src/routes/tickets.ts                                                        
+                                                                                                                        
+  Endpoints:                                                                                                            
+  - POST /api/tickets — public. Accepts { title, description, category, submitterEmail, submitterName }. Creates the
+  ticket, inserts the description as the first message (is_vp: false). Emails the VP of Technology using Resend (use    
+  VP_TECH_EMAIL env var, fall back to first email in EXEC_EMAILS). Returns the created ticket.                      
+  - GET /api/tickets — requires exec token header (x-exec-token, verified against doc_exec_tokens table same as the     
+  documents feature). Returns all tickets ordered by created_at desc. Accepts optional ?status= filter.            
+  - GET /api/tickets/mine?email=... — public. Returns tickets matching the submitter email.                             
+  - GET /api/tickets/:id — public. Returns the ticket plus all its messages ordered by created_at asc.
+  - POST /api/tickets/:id/messages — public (no token = student reply, x-exec-token present = VP reply). Adds a message.
+   If VP reply: emails the student. If student reply: emails the VP.                                                    
+  - PATCH /api/tickets/:id/status — requires exec token. Updates status to open|in_progress|resolved. Emails the student
+   of the status change.                                                                                                
+                                                                                                                        
+  Wire the new router into artifacts/api-server/src/routes/index.ts.
+                                                                                                                        
+  Frontend — create two new pages:       
+                                                                                                                        
+  artifacts/calendar-dashboard/src/pages/tickets.tsx — student-facing page at /tickets                                  
+  - Default view: a form to submit a ticket (name, UW email, category dropdown, subject, description textarea)
+  - After submission: navigate to ?id=<uuid> and show the ticket view                                                   
+  - When ?id=<uuid> in URL: show the ticket details (title, status badge, category, submitter info, ticket ID #XXXXXXXX)
+   plus a chat-style conversation thread (student messages left-aligned, VP messages right-aligned in a different       
+  color), plus a reply textarea. Disabled when ticket is resolved.                                                      
+  - Bottom section: "Already have a ticket?" with an email lookup input that lists all tickets for that email           
+  - Status badges: open = amber, in_progress = blue, resolved = green                                                   
+                                                                                                                        
+  artifacts/calendar-dashboard/src/pages/tickets-dashboard.tsx — VP dashboard at /tickets/dashboard
+  - Requires exec auth — reuse the same magic link flow and session storage (SESSION_KEY = "mbaa_exec_session") as the  
+  Documents page. The login modal should call POST /api/documents/auth/request and POST /api/documents/auth/verify.     
+  - Shows a header with open ticket count badge, signed-in email chip, refresh button                                   
+  - Filter tabs: All | Open | In Progress | Resolved with counts                                                        
+  - Ticket list: each row shows status badge, category, title, submitter name + email, relative time updated            
+  - Click a ticket → detail view: ticket metadata grid (from, submitted date, ticket ID), chat conversation thread (VP  
+  messages labeled "VP of Technology (you)" and right-aligned), reply textarea that sends with x-exec-token header,     
+  status transition button (Open→"Mark In Progress", In Progress→"Mark Resolved", Resolved→"Re-open")                   
+                                                                                                                        
+  Add routes to artifacts/calendar-dashboard/src/App.tsx:                                                               
+  <Route path="/tickets" component={Tickets} />                                                                         
+  <Route path="/tickets/dashboard" component={TicketsDashboard} />
+                                                                                                                        
+  Update artifacts/calendar-dashboard/src/pages/home.tsx — in the "Other places to go" grid, change the Documents card
+  from md:col-span-2 to half-width, and add a new half-width card "04 · Support" linking to /tickets with subtitle      
+  "escalate issues to the VP of Technology".
+                                                                                                                        
+  ---                                    
+  3. Run these commands after making all code changes:
+                                                                                                                        
+  1. Push the new DB tables:
+  cd lib/db && pnpm push                                                                                                
+  2. Rebuild the API server:                                                                                            
+  pnpm --filter @workspace/api-server run build
+  3. Restart/redeploy the app.                                                                                          
+                                                                                                                        
+  ---                     
+  Environment variable to add (Secrets):                                                                                
+                                                                                                                        
+  - VP_TECH_EMAIL = the VP of Technology's UW email address (used for ticket notification emails)
