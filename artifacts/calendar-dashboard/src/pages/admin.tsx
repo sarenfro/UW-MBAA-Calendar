@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Trash2, Plus, ShieldAlert, Lock, RefreshCw, Pencil, X, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, ShieldAlert, Lock, RefreshCw, Pencil, X, Check, ChevronDown, ChevronUp, ArrowUpDown, ArrowUp, ArrowDown, Shuffle } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -426,12 +426,59 @@ function CalendarRow({
   );
 }
 
+function hslToHex(h: number, s: number, l: number): string {
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color).toString(16).padStart(2, "0");
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+function hexToHsl(hex: string): [number, number, number] {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h = 0;
+  if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+  else if (max === g) h = ((b - r) / d + 2) / 6;
+  else h = ((r - g) / d + 4) / 6;
+  return [h * 360, s, l];
+}
+
+function generateUniqueColor(usedColors: string[]): string {
+  const usedHues = usedColors
+    .filter((c) => /^#[0-9a-f]{6}$/i.test(c))
+    .map((c) => hexToHsl(c)[0]);
+
+  let bestHue = 0;
+  let bestGap = 0;
+  const candidates = Array.from({ length: 360 }, (_, i) => i);
+  for (const hue of candidates) {
+    const minDist = usedHues.reduce((min, h) => {
+      const d = Math.min(Math.abs(hue - h), 360 - Math.abs(hue - h));
+      return Math.min(min, d);
+    }, 360);
+    if (minDist > bestGap) { bestGap = minDist; bestHue = hue; }
+  }
+  // Add slight randomness within the best zone
+  const finalHue = (bestHue + (Math.random() * 20 - 10) + 360) % 360;
+  return hslToHex(finalHue, 0.65 + Math.random() * 0.2, 0.45 + Math.random() * 0.1);
+}
+
 function CalendarManagementPanel({ password }: { password: string }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
   const [form, setForm] = useState<CalendarFormState>(EMPTY_FORM);
   const [addError, setAddError] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
 
   const queryKey = getAdminListCalendarsQueryKey({ password });
   const { data: calendars, isLoading } = useAdminListCalendars(
@@ -474,6 +521,16 @@ function CalendarManagementPanel({ password }: { password: string }) {
     });
   }
 
+  const sortedCalendars = calendars
+    ? [...calendars].sort((a, b) => {
+        if (sortDir === "asc") return a.name.localeCompare(b.name);
+        if (sortDir === "desc") return b.name.localeCompare(a.name);
+        return 0;
+      })
+    : [];
+
+  const SortIcon = sortDir === "asc" ? ArrowUp : sortDir === "desc" ? ArrowDown : ArrowUpDown;
+
   return (
     <div className="border border-border/60">
       {isLoading ? (
@@ -487,8 +544,17 @@ function CalendarManagementPanel({ password }: { password: string }) {
           <TableHeader>
             <TableRow className="border-b border-border/60 hover:bg-transparent">
               <TableHead className="py-3 w-4" />
-              <TableHead className="text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground py-3">
-                Name
+              <TableHead className="py-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSortDir((d) => (d === "asc" ? "desc" : d === "desc" ? null : "asc"))
+                  }
+                  className="flex items-center gap-1 text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Name
+                  <SortIcon className="h-3 w-3" />
+                </button>
               </TableHead>
               <TableHead className="text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground py-3 hidden md:table-cell">
                 Owner
@@ -500,7 +566,7 @@ function CalendarManagementPanel({ password }: { password: string }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {calendars.map((cal) => (
+            {sortedCalendars.map((cal) => (
               <CalendarRow
                 key={cal.id}
                 calendar={cal}
@@ -586,6 +652,19 @@ function CalendarManagementPanel({ password }: { password: string }) {
                     className="h-8 text-sm rounded-sm border-border/60 font-mono flex-1"
                     maxLength={7}
                   />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-sm border-border/60 shrink-0"
+                    title="Generate a color not used by existing calendars"
+                    onClick={() => {
+                      const used = (calendars ?? []).map((c) => c.color);
+                      setForm((f) => ({ ...f, color: generateUniqueColor(used) }));
+                    }}
+                  >
+                    <Shuffle className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
               </div>
               <div className="space-y-1">
