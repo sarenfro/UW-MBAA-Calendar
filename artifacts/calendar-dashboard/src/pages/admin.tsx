@@ -313,6 +313,19 @@ function ClubRow({
             </span>
           )}
         </TableCell>
+        <TableCell className="py-3 hidden xl:table-cell">
+          {(() => {
+            const linked = availableCalendars.find((c) => c.id === club.calendarId);
+            return linked ? (
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: linked.color }} />
+                <span className="text-xs text-muted-foreground truncate max-w-[160px]">{linked.name}</span>
+              </span>
+            ) : (
+              <span className="text-xs text-muted-foreground/40">—</span>
+            );
+          })()}
+        </TableCell>
         <TableCell className="py-3 text-right">
           <div className="flex items-center justify-end gap-1">
             {editing ? (
@@ -365,7 +378,7 @@ function ClubRow({
       {editing && (
         <TableRow className="bg-muted/10 border-b border-border/40">
           <TableCell />
-          <TableCell colSpan={4} className="py-3">
+          <TableCell colSpan={5} className="py-3">
             <div className="flex flex-wrap gap-4">
               <div className="space-y-1.5 flex-1 min-w-[180px]">
                 <Label className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground">
@@ -541,6 +554,9 @@ function ClubManagementPanel({ password }: { password: string }) {
               </TableHead>
               <TableHead className="text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground py-3 hidden lg:table-cell">
                 Status
+              </TableHead>
+              <TableHead className="text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground py-3 hidden xl:table-cell">
+                Calendar
               </TableHead>
               <TableHead className="py-3 w-24" />
             </TableRow>
