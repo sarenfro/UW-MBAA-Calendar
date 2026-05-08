@@ -73,7 +73,7 @@ export default function Home() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
         <aside className="lg:col-span-3 space-y-10">
           <CalendarSidebar
-            calendars={calendars?.filter((c) => c.name !== "UW Foster Undergraduate Events")}
+            calendars={calendars}
             hiddenCalendarIds={hiddenCalendarIds}
             onToggle={toggleCalendar}
             isLoading={!calendars}
