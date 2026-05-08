@@ -215,6 +215,30 @@ export interface ClubRoster {
   renewalForecast: RenewalForecast;
 }
 
+export interface AdminCalendar {
+  id: number;
+  name: string;
+  /** @nullable */
+  description: string | null;
+  color: string;
+  timezone: string;
+  owner: string;
+  defaultHidden: boolean;
+  /** @nullable */
+  subscriptionUrl: string | null;
+}
+
+export interface AdminCalendarBody {
+  password: string;
+  name: string;
+  description?: string;
+  color: string;
+  timezone?: string;
+  owner: string;
+  subscriptionUrl?: string;
+  defaultHidden?: boolean;
+}
+
 export interface AdminVerifyBody {
   password: string;
 }
@@ -273,6 +297,10 @@ export const ListDirectoryMembersProgram = {
 
 export type SearchMembersParams = {
   q: string;
+};
+
+export type AdminListCalendarsParams = {
+  password: string;
 };
 
 export type GetClubRosterParams = {

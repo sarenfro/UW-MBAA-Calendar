@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Trash2, Plus, ShieldAlert, Lock, RefreshCw } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, ShieldAlert, Lock, RefreshCw, Pencil, X, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -23,12 +24,28 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   useListClubs,
   useListClubLeads,
   getListClubLeadsQueryKey,
   useAddClubLead,
   useRemoveClubLead,
   useVerifyAdminPassword,
+  useAdminListCalendars,
+  getAdminListCalendarsQueryKey,
+  useAdminCreateCalendar,
+  useAdminUpdateCalendar,
+  useAdminDeleteCalendar,
+  type AdminCalendar,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -138,6 +155,494 @@ function PasswordGate({ onUnlock }: { onUnlock: (pw: string) => void }) {
         </div>
       </div>
     </Layout>
+  );
+}
+
+// ─── Calendar management ──────────────────────────────────────────────────────
+
+type CalendarFormState = {
+  name: string;
+  owner: string;
+  color: string;
+  subscriptionUrl: string;
+  description: string;
+  timezone: string;
+  defaultHidden: boolean;
+};
+
+const EMPTY_FORM: CalendarFormState = {
+  name: "",
+  owner: "",
+  color: "#7c3aed",
+  subscriptionUrl: "",
+  description: "",
+  timezone: "America/Los_Angeles",
+  defaultHidden: false,
+};
+
+function CalendarRow({
+  calendar,
+  password,
+  onDeleted,
+  onUpdated,
+}: {
+  calendar: AdminCalendar;
+  password: string;
+  onDeleted: () => void;
+  onUpdated: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [form, setForm] = useState<CalendarFormState>({
+    name: calendar.name,
+    owner: calendar.owner,
+    color: calendar.color,
+    subscriptionUrl: calendar.subscriptionUrl ?? "",
+    description: calendar.description ?? "",
+    timezone: calendar.timezone,
+    defaultHidden: calendar.defaultHidden,
+  });
+  const { toast } = useToast();
+
+  const updateMutation = useAdminUpdateCalendar({
+    mutation: {
+      onSuccess: () => {
+        setEditing(false);
+        onUpdated();
+        toast({ title: "Calendar updated" });
+      },
+      onError: () => {
+        toast({ title: "Update failed", variant: "destructive" });
+      },
+    },
+  });
+
+  const deleteMutation = useAdminDeleteCalendar({
+    mutation: {
+      onSuccess: () => {
+        onDeleted();
+        toast({ title: "Calendar deleted", description: `"${calendar.name}" and all its events have been removed.` });
+      },
+      onError: () => {
+        toast({ title: "Delete failed", variant: "destructive" });
+      },
+    },
+  });
+
+  function handleSave() {
+    updateMutation.mutate({
+      id: calendar.id,
+      data: { password, ...form, subscriptionUrl: form.subscriptionUrl || undefined },
+    });
+  }
+
+  function handleDelete() {
+    deleteMutation.mutate({ id: calendar.id, data: { password } });
+  }
+
+  return (
+    <>
+      <TableRow className="border-b border-border/40 last:border-0 hover:bg-muted/20 align-top">
+        <TableCell className="py-3 w-4">
+          <span
+            className="inline-block w-3 h-3 rounded-full mt-0.5"
+            style={{ backgroundColor: editing ? form.color : calendar.color }}
+          />
+        </TableCell>
+        <TableCell className="py-3 font-medium text-sm min-w-[160px]">
+          {editing ? (
+            <Input
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              className="h-7 text-sm rounded-sm border-border/60 px-2"
+            />
+          ) : (
+            <span>{calendar.name}</span>
+          )}
+        </TableCell>
+        <TableCell className="py-3 text-sm text-muted-foreground hidden md:table-cell min-w-[120px]">
+          {editing ? (
+            <Input
+              value={form.owner}
+              onChange={(e) => setForm((f) => ({ ...f, owner: e.target.value }))}
+              className="h-7 text-sm rounded-sm border-border/60 px-2"
+            />
+          ) : (
+            <span>{calendar.owner}</span>
+          )}
+        </TableCell>
+        <TableCell className="py-3 text-sm text-muted-foreground hidden lg:table-cell min-w-[260px]">
+          {editing ? (
+            <Input
+              value={form.subscriptionUrl}
+              onChange={(e) => setForm((f) => ({ ...f, subscriptionUrl: e.target.value }))}
+              placeholder="https://…/feed.ics"
+              className="h-7 text-xs rounded-sm border-border/60 px-2 font-mono"
+            />
+          ) : (
+            <span className="font-mono text-xs truncate block max-w-[260px]">
+              {calendar.subscriptionUrl ?? <em className="not-italic text-muted-foreground/50">no URL</em>}
+            </span>
+          )}
+        </TableCell>
+        <TableCell className="py-3 text-right w-24">
+          {editing ? (
+            <div className="flex items-center justify-end gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-primary"
+                disabled={updateMutation.isPending}
+                onClick={handleSave}
+              >
+                <Check className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground"
+                onClick={() => {
+                  setEditing(false);
+                  setForm({
+                    name: calendar.name,
+                    owner: calendar.owner,
+                    color: calendar.color,
+                    subscriptionUrl: calendar.subscriptionUrl ?? "",
+                    description: calendar.description ?? "",
+                    timezone: calendar.timezone,
+                    defaultHidden: calendar.defaultHidden,
+                  });
+                }}
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-end gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-primary"
+                onClick={() => setEditing(true)}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                onClick={() => setConfirmDelete(true)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
+        </TableCell>
+      </TableRow>
+
+      {editing && (
+        <TableRow className="border-b border-border/40 bg-muted/10">
+          <TableCell colSpan={5} className="pb-4 pt-1 px-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground">
+                  Color
+                </Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={form.color}
+                    onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
+                    className="w-8 h-7 rounded-sm border border-border/60 cursor-pointer p-0.5 bg-transparent"
+                  />
+                  <Input
+                    value={form.color}
+                    onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
+                    className="h-7 text-xs rounded-sm border-border/60 px-2 font-mono flex-1"
+                    maxLength={7}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground">
+                  Timezone
+                </Label>
+                <Input
+                  value={form.timezone}
+                  onChange={(e) => setForm((f) => ({ ...f, timezone: e.target.value }))}
+                  className="h-7 text-xs rounded-sm border-border/60 px-2"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground">
+                  Description
+                </Label>
+                <Input
+                  value={form.description}
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  className="h-7 text-xs rounded-sm border-border/60 px-2"
+                />
+              </div>
+              <div className="flex items-end gap-2 pb-0.5">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id={`hidden-${calendar.id}`}
+                    checked={form.defaultHidden}
+                    onCheckedChange={(v) => setForm((f) => ({ ...f, defaultHidden: v }))}
+                  />
+                  <Label
+                    htmlFor={`hidden-${calendar.id}`}
+                    className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground cursor-pointer"
+                  >
+                    Hidden by default
+                  </Label>
+                </div>
+              </div>
+            </div>
+          </TableCell>
+        </TableRow>
+      )}
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete "{calendar.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the calendar and all of its events. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDelete}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
+function CalendarManagementPanel({ password }: { password: string }) {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [form, setForm] = useState<CalendarFormState>(EMPTY_FORM);
+  const [addError, setAddError] = useState<string | null>(null);
+
+  const queryKey = getAdminListCalendarsQueryKey({ password });
+  const { data: calendars, isLoading } = useAdminListCalendars(
+    { password },
+    { query: { queryKey } }
+  );
+
+  const createMutation = useAdminCreateCalendar({
+    mutation: {
+      onSuccess: () => {
+        setForm(EMPTY_FORM);
+        setShowAddForm(false);
+        setAddError(null);
+        qc.invalidateQueries({ queryKey });
+        toast({ title: "Calendar added" });
+      },
+      onError: (err: unknown) => {
+        const msg =
+          (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? "Something went wrong";
+        setAddError(msg);
+      },
+    },
+  });
+
+  function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    setAddError(null);
+    if (!form.name.trim() || !form.owner.trim() || !form.color.trim()) return;
+    createMutation.mutate({
+      data: {
+        password,
+        name: form.name.trim(),
+        owner: form.owner.trim(),
+        color: form.color,
+        description: form.description || undefined,
+        timezone: form.timezone || "America/Los_Angeles",
+        subscriptionUrl: form.subscriptionUrl || undefined,
+        defaultHidden: form.defaultHidden,
+      },
+    });
+  }
+
+  return (
+    <div className="border border-border/60">
+      {isLoading ? (
+        <div className="p-6 space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-full" />
+          ))}
+        </div>
+      ) : calendars && calendars.length > 0 ? (
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-border/60 hover:bg-transparent">
+              <TableHead className="py-3 w-4" />
+              <TableHead className="text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground py-3">
+                Name
+              </TableHead>
+              <TableHead className="text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground py-3 hidden md:table-cell">
+                Owner
+              </TableHead>
+              <TableHead className="text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground py-3 hidden lg:table-cell">
+                ICS URL
+              </TableHead>
+              <TableHead className="py-3 w-24" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {calendars.map((cal) => (
+              <CalendarRow
+                key={cal.id}
+                calendar={cal}
+                password={password}
+                onDeleted={() => qc.invalidateQueries({ queryKey })}
+                onUpdated={() => qc.invalidateQueries({ queryKey })}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      ) : (
+        <div className="py-8 text-center">
+          <p className="text-sm text-muted-foreground italic">No calendars yet.</p>
+        </div>
+      )}
+
+      <div className="border-t border-border/60">
+        <button
+          type="button"
+          onClick={() => setShowAddForm((v) => !v)}
+          className="w-full flex items-center justify-between px-4 py-3 text-xs font-semibold tracking-[0.14em] uppercase text-muted-foreground hover:text-primary transition-colors"
+        >
+          <span className="flex items-center gap-1.5">
+            <Plus className="h-3.5 w-3.5" />
+            Add calendar
+          </span>
+          {showAddForm ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        </button>
+
+        {showAddForm && (
+          <form onSubmit={handleAdd} className="px-4 pb-4 space-y-4 border-t border-border/40">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground">
+                  Name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="Finance Society"
+                  className="h-8 text-sm rounded-sm border-border/60"
+                  required
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground">
+                  Owner / Source <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  value={form.owner}
+                  onChange={(e) => setForm((f) => ({ ...f, owner: e.target.value }))}
+                  placeholder="UW Foster MBAA"
+                  className="h-8 text-sm rounded-sm border-border/60"
+                  required
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground">
+                  ICS Feed URL
+                </Label>
+                <Input
+                  value={form.subscriptionUrl}
+                  onChange={(e) => setForm((f) => ({ ...f, subscriptionUrl: e.target.value }))}
+                  placeholder="https://calendar.google.com/…/basic.ics"
+                  className="h-8 text-sm rounded-sm border-border/60 font-mono"
+                  type="url"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground">
+                  Color <span className="text-destructive">*</span>
+                </Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={form.color}
+                    onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
+                    className="w-8 h-8 rounded-sm border border-border/60 cursor-pointer p-0.5 bg-transparent"
+                  />
+                  <Input
+                    value={form.color}
+                    onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
+                    className="h-8 text-sm rounded-sm border-border/60 font-mono flex-1"
+                    maxLength={7}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground">
+                  Description
+                </Label>
+                <Input
+                  value={form.description}
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  placeholder="Optional description"
+                  className="h-8 text-sm rounded-sm border-border/60"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground">
+                  Timezone
+                </Label>
+                <Input
+                  value={form.timezone}
+                  onChange={(e) => setForm((f) => ({ ...f, timezone: e.target.value }))}
+                  placeholder="America/Los_Angeles"
+                  className="h-8 text-sm rounded-sm border-border/60"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="add-hidden"
+                  checked={form.defaultHidden}
+                  onCheckedChange={(v) => setForm((f) => ({ ...f, defaultHidden: v }))}
+                />
+                <Label
+                  htmlFor="add-hidden"
+                  className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground cursor-pointer"
+                >
+                  Hidden by default
+                </Label>
+              </div>
+              <div className="flex items-center gap-2">
+                {addError && <p className="text-xs text-destructive">{addError}</p>}
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={createMutation.isPending || !form.name.trim() || !form.owner.trim()}
+                  className="rounded-sm h-8 text-xs font-semibold tracking-[0.14em] uppercase gap-1.5"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {createMutation.isPending ? "Adding…" : "Add Calendar"}
+                </Button>
+              </div>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -349,41 +854,56 @@ function AdminContent({ onLock, password }: { onLock: () => void; password: stri
           <em className="italic font-light text-primary">Management</em>
         </h1>
         <p className="mt-6 text-base md:text-lg text-muted-foreground max-w-2xl leading-relaxed">
-          Designate which members can request magic-link access to a club's
-          roster. Only members already in the roster database can be added as
-          leads.
+          Manage calendar sources, designate which members can request magic-link access to a club's
+          roster, and manually trigger calendar syncs.
         </p>
       </section>
 
       <Separator className="mb-10" />
 
       <div className="max-w-3xl space-y-10">
+
+        {/* Calendar Data */}
         <div>
           <SectionLabel>Calendar Data</SectionLabel>
-          <div className="border border-border/60 p-5 flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-foreground">Sync all calendars</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Fetches the latest events from all ICS feeds and refreshes the database. Takes ~30 seconds.
-              </p>
+          <div className="space-y-4">
+            <div className="border border-border/60 p-5 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-foreground">Sync all calendars</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Fetches the latest events from all ICS feeds and refreshes the database. Takes ~30 seconds.
+                </p>
+              </div>
+              <Button
+                onClick={handleSync}
+                disabled={syncing}
+                variant="outline"
+                size="sm"
+                className="rounded-sm shrink-0 text-xs font-semibold tracking-[0.14em] uppercase gap-1.5 border-border/60"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
+                {syncing ? "Syncing…" : "Sync Now"}
+              </Button>
             </div>
-            <Button
-              onClick={handleSync}
-              disabled={syncing}
-              variant="outline"
-              size="sm"
-              className="rounded-sm shrink-0 text-xs font-semibold tracking-[0.14em] uppercase gap-1.5 border-border/60"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
-              {syncing ? "Syncing…" : "Sync Now"}
-            </Button>
           </div>
         </div>
 
         <Separator />
 
+        {/* Calendar Sources */}
         <div>
-          <SectionLabel>Select a club</SectionLabel>
+          <SectionLabel>Calendar Sources</SectionLabel>
+          <p className="text-sm text-muted-foreground mb-4">
+            Add, edit, or remove calendar ICS feeds. Deleting a calendar also removes all its synced events.
+          </p>
+          <CalendarManagementPanel password={password} />
+        </div>
+
+        <Separator />
+
+        {/* Club Leads */}
+        <div>
+          <SectionLabel>Club Lead Access</SectionLabel>
           {clubsLoading ? (
             <Skeleton className="h-9 w-64" />
           ) : (

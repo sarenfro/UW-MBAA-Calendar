@@ -346,6 +346,136 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /admin/calendars:
+    get:
+      operationId: adminListCalendars
+      tags: [admin]
+      summary: List all calendars with subscription URLs (admin)
+      parameters:
+        - in: query
+          name: password
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of calendars with ICS feed URLs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminCalendar"
+        "401":
+          description: Wrong password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: adminCreateCalendar
+      tags: [admin]
+      summary: Create a new calendar source (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCalendarBody"
+      responses:
+        "201":
+          description: Calendar created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminCalendar"
+        "400":
+          description: Invalid body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Wrong password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/calendars/{id}:
+    patch:
+      operationId: adminUpdateCalendar
+      tags: [admin]
+      summary: Update a calendar source (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCalendarBody"
+      responses:
+        "200":
+          description: Updated calendar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminCalendar"
+        "400":
+          description: Invalid body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Wrong password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Calendar not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: adminDeleteCalendar
+      tags: [admin]
+      summary: Delete a calendar and all its events (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminVerifyBody"
+      responses:
+        "204":
+          description: Calendar deleted
+        "401":
+          description: Wrong password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Calendar not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /admin/verify:
     post:
       operationId: verifyAdminPassword
@@ -998,6 +1128,60 @@ components:
         - currentAcademicYear
         - members
         - renewalForecast
+
+    AdminCalendar:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        color:
+          type: string
+        timezone:
+          type: string
+        owner:
+          type: string
+        defaultHidden:
+          type: boolean
+        subscriptionUrl:
+          type: ["string", "null"]
+      required:
+        - id
+        - name
+        - description
+        - color
+        - timezone
+        - owner
+        - defaultHidden
+        - subscriptionUrl
+
+    AdminCalendarBody:
+      type: object
+      properties:
+        password:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        color:
+          type: string
+        timezone:
+          type: string
+        owner:
+          type: string
+        subscriptionUrl:
+          type: string
+        defaultHidden:
+          type: boolean
+      required:
+        - password
+        - name
+        - color
+        - owner
 
     AdminVerifyBody:
       type: object

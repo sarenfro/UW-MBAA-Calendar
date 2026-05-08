@@ -18,6 +18,9 @@ import type {
 
 import type {
   AddClubLeadBody,
+  AdminCalendar,
+  AdminCalendarBody,
+  AdminListCalendarsParams,
   AdminVerifyBody,
   AdminVerifyResponse,
   Calendar,
@@ -1238,6 +1241,363 @@ export const useRequestRosterAccess = <
   TContext
 > => {
   return useMutation(getRequestRosterAccessMutationOptions(options));
+};
+
+/**
+ * @summary List all calendars with subscription URLs (admin)
+ */
+export const getAdminListCalendarsUrl = (params: AdminListCalendarsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/admin/calendars?${stringifiedParams}`
+    : `/api/admin/calendars`;
+};
+
+export const adminListCalendars = async (
+  params: AdminListCalendarsParams,
+  options?: RequestInit,
+): Promise<AdminCalendar[]> => {
+  return customFetch<AdminCalendar[]>(getAdminListCalendarsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAdminListCalendarsQueryKey = (
+  params?: AdminListCalendarsParams,
+) => {
+  return [`/api/admin/calendars`, ...(params ? [params] : [])] as const;
+};
+
+export const getAdminListCalendarsQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminListCalendars>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params: AdminListCalendarsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof adminListCalendars>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getAdminListCalendarsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof adminListCalendars>>
+  > = ({ signal }) => adminListCalendars(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminListCalendars>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type AdminListCalendarsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminListCalendars>>
+>;
+export type AdminListCalendarsQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary List all calendars with subscription URLs (admin)
+ */
+
+export function useAdminListCalendars<
+  TData = Awaited<ReturnType<typeof adminListCalendars>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params: AdminListCalendarsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof adminListCalendars>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAdminListCalendarsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a new calendar source (admin)
+ */
+export const getAdminCreateCalendarUrl = () => {
+  return `/api/admin/calendars`;
+};
+
+export const adminCreateCalendar = async (
+  adminCalendarBody: AdminCalendarBody,
+  options?: RequestInit,
+): Promise<AdminCalendar> => {
+  return customFetch<AdminCalendar>(getAdminCreateCalendarUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(adminCalendarBody),
+  });
+};
+
+export const getAdminCreateCalendarMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminCreateCalendar>>,
+    TError,
+    { data: BodyType<AdminCalendarBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminCreateCalendar>>,
+  TError,
+  { data: BodyType<AdminCalendarBody> },
+  TContext
+> => {
+  const mutationKey = ["adminCreateCalendar"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminCreateCalendar>>,
+    { data: BodyType<AdminCalendarBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return adminCreateCalendar(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminCreateCalendarMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminCreateCalendar>>
+>;
+export type AdminCreateCalendarMutationBody = BodyType<AdminCalendarBody>;
+export type AdminCreateCalendarMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Create a new calendar source (admin)
+ */
+export const useAdminCreateCalendar = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminCreateCalendar>>,
+    TError,
+    { data: BodyType<AdminCalendarBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminCreateCalendar>>,
+  TError,
+  { data: BodyType<AdminCalendarBody> },
+  TContext
+> => {
+  return useMutation(getAdminCreateCalendarMutationOptions(options));
+};
+
+/**
+ * @summary Update a calendar source (admin)
+ */
+export const getAdminUpdateCalendarUrl = (id: number) => {
+  return `/api/admin/calendars/${id}`;
+};
+
+export const adminUpdateCalendar = async (
+  id: number,
+  adminCalendarBody: AdminCalendarBody,
+  options?: RequestInit,
+): Promise<AdminCalendar> => {
+  return customFetch<AdminCalendar>(getAdminUpdateCalendarUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(adminCalendarBody),
+  });
+};
+
+export const getAdminUpdateCalendarMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminUpdateCalendar>>,
+    TError,
+    { id: number; data: BodyType<AdminCalendarBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminUpdateCalendar>>,
+  TError,
+  { id: number; data: BodyType<AdminCalendarBody> },
+  TContext
+> => {
+  const mutationKey = ["adminUpdateCalendar"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminUpdateCalendar>>,
+    { id: number; data: BodyType<AdminCalendarBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return adminUpdateCalendar(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminUpdateCalendarMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminUpdateCalendar>>
+>;
+export type AdminUpdateCalendarMutationBody = BodyType<AdminCalendarBody>;
+export type AdminUpdateCalendarMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Update a calendar source (admin)
+ */
+export const useAdminUpdateCalendar = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminUpdateCalendar>>,
+    TError,
+    { id: number; data: BodyType<AdminCalendarBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminUpdateCalendar>>,
+  TError,
+  { id: number; data: BodyType<AdminCalendarBody> },
+  TContext
+> => {
+  return useMutation(getAdminUpdateCalendarMutationOptions(options));
+};
+
+/**
+ * @summary Delete a calendar and all its events (admin)
+ */
+export const getAdminDeleteCalendarUrl = (id: number) => {
+  return `/api/admin/calendars/${id}`;
+};
+
+export const adminDeleteCalendar = async (
+  id: number,
+  adminVerifyBody: AdminVerifyBody,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getAdminDeleteCalendarUrl(id), {
+    ...options,
+    method: "DELETE",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(adminVerifyBody),
+  });
+};
+
+export const getAdminDeleteCalendarMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminDeleteCalendar>>,
+    TError,
+    { id: number; data: BodyType<AdminVerifyBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminDeleteCalendar>>,
+  TError,
+  { id: number; data: BodyType<AdminVerifyBody> },
+  TContext
+> => {
+  const mutationKey = ["adminDeleteCalendar"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminDeleteCalendar>>,
+    { id: number; data: BodyType<AdminVerifyBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return adminDeleteCalendar(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminDeleteCalendarMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminDeleteCalendar>>
+>;
+export type AdminDeleteCalendarMutationBody = BodyType<AdminVerifyBody>;
+export type AdminDeleteCalendarMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Delete a calendar and all its events (admin)
+ */
+export const useAdminDeleteCalendar = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminDeleteCalendar>>,
+    TError,
+    { id: number; data: BodyType<AdminVerifyBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminDeleteCalendar>>,
+  TError,
+  { id: number; data: BodyType<AdminVerifyBody> },
+  TContext
+> => {
+  return useMutation(getAdminDeleteCalendarMutationOptions(options));
 };
 
 /**

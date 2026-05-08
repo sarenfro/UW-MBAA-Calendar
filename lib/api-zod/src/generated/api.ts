@@ -395,6 +395,81 @@ export const RequestRosterAccessResponse = zod.object({
 });
 
 /**
+ * @summary List all calendars with subscription URLs (admin)
+ */
+export const AdminListCalendarsQueryParams = zod.object({
+  password: zod.coerce.string(),
+});
+
+export const AdminListCalendarsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  description: zod.string().nullable(),
+  color: zod.string(),
+  timezone: zod.string(),
+  owner: zod.string(),
+  defaultHidden: zod.boolean(),
+  subscriptionUrl: zod.string().nullable(),
+});
+export const AdminListCalendarsResponse = zod.array(
+  AdminListCalendarsResponseItem,
+);
+
+/**
+ * @summary Create a new calendar source (admin)
+ */
+export const AdminCreateCalendarBody = zod.object({
+  password: zod.string(),
+  name: zod.string(),
+  description: zod.string().optional(),
+  color: zod.string(),
+  timezone: zod.string().optional(),
+  owner: zod.string(),
+  subscriptionUrl: zod.string().optional(),
+  defaultHidden: zod.boolean().optional(),
+});
+
+/**
+ * @summary Update a calendar source (admin)
+ */
+export const AdminUpdateCalendarParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AdminUpdateCalendarBody = zod.object({
+  password: zod.string(),
+  name: zod.string(),
+  description: zod.string().optional(),
+  color: zod.string(),
+  timezone: zod.string().optional(),
+  owner: zod.string(),
+  subscriptionUrl: zod.string().optional(),
+  defaultHidden: zod.boolean().optional(),
+});
+
+export const AdminUpdateCalendarResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  description: zod.string().nullable(),
+  color: zod.string(),
+  timezone: zod.string(),
+  owner: zod.string(),
+  defaultHidden: zod.boolean(),
+  subscriptionUrl: zod.string().nullable(),
+});
+
+/**
+ * @summary Delete a calendar and all its events (admin)
+ */
+export const AdminDeleteCalendarParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AdminDeleteCalendarBody = zod.object({
+  password: zod.string(),
+});
+
+/**
  * @summary Verify the admin password
  */
 export const VerifyAdminPasswordBody = zod.object({
