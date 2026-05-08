@@ -990,7 +990,7 @@ function AdminContent({ onLock, password }: { onLock: () => void; password: stri
               <SelectTrigger className="w-64 rounded-sm h-9 text-sm border-border/60">
                 <SelectValue placeholder="Choose a club…" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-72 overflow-y-auto">
                 {clubs?.map((c) => (
                   <SelectItem key={c.slug} value={c.slug}>
                     {c.name}
