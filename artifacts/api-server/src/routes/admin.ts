@@ -179,8 +179,9 @@ const clubBodySchema = z.object({
   name: z.string().min(1),
   slug: z.string().min(1).regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens"),
   description: z.string().optional(),
-  calendarId: z.number().int().optional(),
+  calendarId: z.number().int().nullable().optional(),
   isActive: z.boolean().optional(),
+  displayOrder: z.number().int().optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -252,6 +253,25 @@ router.patch("/admin/clubs/:id", requireAdmin, async (req, res): Promise<void> =
     isActive: row.isActive,
     createdAt: row.createdAt.toISOString(),
   });
+});
+
+// ---------------------------------------------------------------------------
+// PUT /api/admin/clubs/reorder — persist custom display order
+// ---------------------------------------------------------------------------
+router.put("/admin/clubs/reorder", requireAdmin, async (req, res): Promise<void> => {
+  const parsed = z.object({ password: z.string(), clubIds: z.array(z.string().uuid()) }).safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid body" });
+    return;
+  }
+  const { clubIds } = parsed.data;
+  await Promise.all(
+    clubIds.map((id, index) =>
+      db.update(clubsTable).set({ displayOrder: index, updatedAt: new Date() }).where(eq(clubsTable.id, id)),
+    ),
+  );
+  req.log.info({ count: clubIds.length }, "admin: clubs reordered");
+  res.status(204).send();
 });
 
 // ---------------------------------------------------------------------------

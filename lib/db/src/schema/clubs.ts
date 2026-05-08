@@ -11,6 +11,7 @@ export const clubsTable = pgTable("clubs", {
   description: text("description"),
   calendarId: integer("calendar_id"),
   isActive: boolean("is_active").notNull().default(true),
+  displayOrder: integer("display_order"),
   pricing: jsonb("pricing").$type<Record<string, number>>(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

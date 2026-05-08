@@ -22,6 +22,7 @@ import type {
   AdminCalendarBody,
   AdminClub,
   AdminClubBody,
+  AdminClubReorderBody,
   AdminListCalendarsParams,
   AdminListClubsParams,
   AdminVerifyBody,
@@ -1955,6 +1956,92 @@ export const useAdminDeleteClub = <
   TContext
 > => {
   return useMutation(getAdminDeleteClubMutationOptions(options));
+};
+
+/**
+ * @summary Persist a custom display order for clubs
+ */
+export const getAdminReorderClubsUrl = () => {
+  return `/api/admin/clubs/reorder`;
+};
+
+export const adminReorderClubs = async (
+  adminClubReorderBody: AdminClubReorderBody,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getAdminReorderClubsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(adminClubReorderBody),
+  });
+};
+
+export const getAdminReorderClubsMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminReorderClubs>>,
+    TError,
+    { data: BodyType<AdminClubReorderBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminReorderClubs>>,
+  TError,
+  { data: BodyType<AdminClubReorderBody> },
+  TContext
+> => {
+  const mutationKey = ["adminReorderClubs"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminReorderClubs>>,
+    { data: BodyType<AdminClubReorderBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return adminReorderClubs(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminReorderClubsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminReorderClubs>>
+>;
+export type AdminReorderClubsMutationBody = BodyType<AdminClubReorderBody>;
+export type AdminReorderClubsMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Persist a custom display order for clubs
+ */
+export const useAdminReorderClubs = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminReorderClubs>>,
+    TError,
+    { data: BodyType<AdminClubReorderBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminReorderClubs>>,
+  TError,
+  { data: BodyType<AdminClubReorderBody> },
+  TContext
+> => {
+  return useMutation(getAdminReorderClubsMutationOptions(options));
 };
 
 /**

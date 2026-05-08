@@ -258,6 +258,12 @@ export interface AdminClubBody {
   description?: string;
   calendarId?: number;
   isActive?: boolean;
+  displayOrder?: number;
+}
+
+export interface AdminClubReorderBody {
+  password: string;
+  clubIds: string[];
 }
 
 export interface AdminVerifyBody {

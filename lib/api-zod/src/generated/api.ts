@@ -497,6 +497,7 @@ export const AdminCreateClubBody = zod.object({
   description: zod.string().optional(),
   calendarId: zod.number().optional(),
   isActive: zod.boolean().optional(),
+  displayOrder: zod.number().optional(),
 });
 
 /**
@@ -513,6 +514,7 @@ export const AdminUpdateClubBody = zod.object({
   description: zod.string().optional(),
   calendarId: zod.number().optional(),
   isActive: zod.boolean().optional(),
+  displayOrder: zod.number().optional(),
 });
 
 export const AdminUpdateClubResponse = zod.object({
@@ -534,6 +536,14 @@ export const AdminDeleteClubParams = zod.object({
 
 export const AdminDeleteClubBody = zod.object({
   password: zod.string(),
+});
+
+/**
+ * @summary Persist a custom display order for clubs
+ */
+export const AdminReorderClubsBody = zod.object({
+  password: zod.string(),
+  clubIds: zod.array(zod.string().uuid()),
 });
 
 /**

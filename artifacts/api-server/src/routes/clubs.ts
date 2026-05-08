@@ -111,7 +111,7 @@ router.get("/clubs", async (req, res): Promise<void> => {
     .select()
     .from(clubsTable)
     .where(eq(clubsTable.isActive, true))
-    .orderBy(asc(clubsTable.name));
+    .orderBy(asc(clubsTable.displayOrder), asc(clubsTable.name));
 
   res.json(clubs.map(shapeClub));
 });

@@ -50,6 +50,7 @@ import {
   useAdminCreateClub,
   useAdminUpdateClub,
   useAdminDeleteClub,
+  useAdminReorderClubs,
   type AdminCalendar,
   type AdminClub,
 } from "@workspace/api-client-react";
@@ -175,11 +176,18 @@ function toSlug(name: string) {
     .replace(/-+/g, "-");
 }
 
+const EXCLUDED_CLUB_CALENDAR_NAMES = [
+  "UW Foster MBAA",
+  "UW Foster Undergraduate Events",
+  "Career Management",
+];
+
 type ClubFormState = {
   name: string;
   slug: string;
   description: string;
   isActive: boolean;
+  calendarId: number | null;
 };
 
 const EMPTY_CLUB_FORM: ClubFormState = {
@@ -187,16 +195,19 @@ const EMPTY_CLUB_FORM: ClubFormState = {
   slug: "",
   description: "",
   isActive: true,
+  calendarId: null,
 };
 
 function ClubRow({
   club,
   password,
+  calendars,
   onDeleted,
   onUpdated,
 }: {
   club: AdminClub;
   password: string;
+  calendars: AdminCalendar[];
   onDeleted: () => void;
   onUpdated: () => void;
 }) {
@@ -207,7 +218,11 @@ function ClubRow({
     slug: club.slug,
     description: club.description ?? "",
     isActive: club.isActive,
+    calendarId: club.calendarId ?? null,
   });
+  const availableCalendars = calendars.filter(
+    (c) => !EXCLUDED_CLUB_CALENDAR_NAMES.includes(c.name),
+  );
   const { toast } = useToast();
 
   const updateMutation = useAdminUpdateClub({
@@ -240,6 +255,7 @@ function ClubRow({
         slug: form.slug,
         description: form.description || undefined,
         isActive: form.isActive,
+        calendarId: form.calendarId ?? undefined,
       },
     });
   }
@@ -316,7 +332,7 @@ function ClubRow({
                   className="h-7 w-7 text-muted-foreground hover:text-destructive"
                   onClick={() => {
                     setEditing(false);
-                    setForm({ name: club.name, slug: club.slug, description: club.description ?? "", isActive: club.isActive });
+                    setForm({ name: club.name, slug: club.slug, description: club.description ?? "", isActive: club.isActive, calendarId: club.calendarId ?? null });
                   }}
                 >
                   <X className="h-3.5 w-3.5" />
@@ -350,16 +366,42 @@ function ClubRow({
         <TableRow className="bg-muted/10 border-b border-border/40">
           <TableCell />
           <TableCell colSpan={4} className="py-3">
-            <div className="space-y-1.5">
-              <Label className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground">
-                Description
-              </Label>
-              <Input
-                value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                placeholder="Short description…"
-                className="h-7 text-sm rounded-sm border-border/60 px-2 max-w-sm"
-              />
+            <div className="flex flex-wrap gap-4">
+              <div className="space-y-1.5 flex-1 min-w-[180px]">
+                <Label className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground">
+                  Description
+                </Label>
+                <Input
+                  value={form.description}
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  placeholder="Short description…"
+                  className="h-7 text-sm rounded-sm border-border/60 px-2"
+                />
+              </div>
+              <div className="space-y-1.5 min-w-[200px]">
+                <Label className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground">
+                  Linked Calendar
+                </Label>
+                <Select
+                  value={form.calendarId !== null ? String(form.calendarId) : "__none__"}
+                  onValueChange={(v) => setForm((f) => ({ ...f, calendarId: v === "__none__" ? null : Number(v) }))}
+                >
+                  <SelectTrigger className="h-7 text-sm rounded-sm border-border/60 w-full">
+                    <SelectValue placeholder="None" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60 overflow-y-auto">
+                    <SelectItem value="__none__">None</SelectItem>
+                    {availableCalendars.map((c) => (
+                      <SelectItem key={c.id} value={String(c.id)}>
+                        <span className="flex items-center gap-2">
+                          <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
+                          {c.name}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </TableCell>
         </TableRow>
@@ -394,12 +436,24 @@ function ClubManagementPanel({ password }: { password: string }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [form, setForm] = useState<ClubFormState>(EMPTY_CLUB_FORM);
   const [addError, setAddError] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
+
+  const calQk = getAdminListCalendarsQueryKey({ password });
+  const { data: allCalendars } = useAdminListCalendars(
+    { password },
+    { query: { queryKey: calQk } },
+  );
+  const availableCalendars = (allCalendars ?? []).filter(
+    (c) => !EXCLUDED_CLUB_CALENDAR_NAMES.includes(c.name),
+  );
 
   const queryKey = getAdminListClubsQueryKey({ password });
   const { data: clubs, isLoading } = useAdminListClubs(
     { password },
     { query: { queryKey } },
   );
+
+  const reorderMutation = useAdminReorderClubs();
 
   const createMutation = useAdminCreateClub({
     mutation: {
@@ -429,9 +483,33 @@ function ClubManagementPanel({ password }: { password: string }) {
         slug: form.slug.trim(),
         description: form.description || undefined,
         isActive: form.isActive,
+        calendarId: form.calendarId ?? undefined,
       },
     });
   }
+
+  function handleSortChange(next: "asc" | "desc" | null) {
+    setSortDir(next);
+    if (!clubs || clubs.length === 0) return;
+    const sorted = [...clubs].sort((a, b) => {
+      if (next === "asc") return a.name.localeCompare(b.name);
+      if (next === "desc") return b.name.localeCompare(a.name);
+      return 0;
+    });
+    reorderMutation.mutate({
+      data: { password, clubIds: sorted.map((c) => c.id) },
+    });
+  }
+
+  const displayClubs = clubs
+    ? [...clubs].sort((a, b) => {
+        if (sortDir === "asc") return a.name.localeCompare(b.name);
+        if (sortDir === "desc") return b.name.localeCompare(a.name);
+        return 0;
+      })
+    : [];
+
+  const SortIcon = sortDir === "asc" ? ArrowUp : sortDir === "desc" ? ArrowDown : ArrowUpDown;
 
   return (
     <div className="border border-border/60">
@@ -446,8 +524,17 @@ function ClubManagementPanel({ password }: { password: string }) {
           <TableHeader>
             <TableRow className="border-b border-border/60 hover:bg-transparent">
               <TableHead className="py-3 w-4" />
-              <TableHead className="text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground py-3">
-                Name
+              <TableHead className="py-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleSortChange(sortDir === "asc" ? "desc" : sortDir === "desc" ? null : "asc")
+                  }
+                  className="flex items-center gap-1 text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Name
+                  <SortIcon className="h-3 w-3" />
+                </button>
               </TableHead>
               <TableHead className="text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground py-3 hidden md:table-cell">
                 Slug
@@ -459,11 +546,12 @@ function ClubManagementPanel({ password }: { password: string }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {clubs.map((club) => (
+            {displayClubs.map((club) => (
               <ClubRow
                 key={club.id}
                 club={club}
                 password={password}
+                calendars={availableCalendars}
                 onDeleted={() => qc.invalidateQueries({ queryKey })}
                 onUpdated={() => qc.invalidateQueries({ queryKey })}
               />
@@ -523,6 +611,31 @@ function ClubManagementPanel({ password }: { password: string }) {
                 placeholder="Short description…"
                 className="h-8 text-sm rounded-sm border-border/60"
               />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground">
+                Linked Calendar
+              </Label>
+              <Select
+                value={form.calendarId !== null ? String(form.calendarId) : "__none__"}
+                onValueChange={(v) => setForm((f) => ({ ...f, calendarId: v === "__none__" ? null : Number(v) }))}
+              >
+                <SelectTrigger className="h-8 text-sm rounded-sm border-border/60 w-full max-w-xs">
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60 overflow-y-auto">
+                  <SelectItem value="__none__">None</SelectItem>
+                  {availableCalendars.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      <span className="flex items-center gap-2">
+                        <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
+                        {c.name}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center gap-2">

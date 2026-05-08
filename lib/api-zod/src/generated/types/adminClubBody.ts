@@ -13,4 +13,5 @@ export interface AdminClubBody {
   description?: string;
   calendarId?: number;
   isActive?: boolean;
+  displayOrder?: number;
 }

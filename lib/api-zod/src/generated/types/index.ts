@@ -11,6 +11,7 @@ export * from "./adminCalendar";
 export * from "./adminCalendarBody";
 export * from "./adminClub";
 export * from "./adminClubBody";
+export * from "./adminClubReorderBody";
 export * from "./adminListCalendarsParams";
 export * from "./adminListClubsParams";
 export * from "./adminVerifyBody";
