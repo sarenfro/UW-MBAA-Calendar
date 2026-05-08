@@ -20,7 +20,10 @@ import type {
   AddClubLeadBody,
   AdminCalendar,
   AdminCalendarBody,
+  AdminClub,
+  AdminClubBody,
   AdminListCalendarsParams,
+  AdminListClubsParams,
   AdminVerifyBody,
   AdminVerifyResponse,
   Calendar,
@@ -1598,6 +1601,360 @@ export const useAdminDeleteCalendar = <
   TContext
 > => {
   return useMutation(getAdminDeleteCalendarMutationOptions(options));
+};
+
+/**
+ * @summary List all clubs (admin)
+ */
+export const getAdminListClubsUrl = (params: AdminListClubsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/admin/clubs?${stringifiedParams}`
+    : `/api/admin/clubs`;
+};
+
+export const adminListClubs = async (
+  params: AdminListClubsParams,
+  options?: RequestInit,
+): Promise<AdminClub[]> => {
+  return customFetch<AdminClub[]>(getAdminListClubsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAdminListClubsQueryKey = (params?: AdminListClubsParams) => {
+  return [`/api/admin/clubs`, ...(params ? [params] : [])] as const;
+};
+
+export const getAdminListClubsQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminListClubs>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params: AdminListClubsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof adminListClubs>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminListClubsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListClubs>>> = ({
+    signal,
+  }) => adminListClubs(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminListClubs>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type AdminListClubsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminListClubs>>
+>;
+export type AdminListClubsQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary List all clubs (admin)
+ */
+
+export function useAdminListClubs<
+  TData = Awaited<ReturnType<typeof adminListClubs>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params: AdminListClubsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof adminListClubs>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAdminListClubsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a new club
+ */
+export const getAdminCreateClubUrl = () => {
+  return `/api/admin/clubs`;
+};
+
+export const adminCreateClub = async (
+  adminClubBody: AdminClubBody,
+  options?: RequestInit,
+): Promise<AdminClub> => {
+  return customFetch<AdminClub>(getAdminCreateClubUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(adminClubBody),
+  });
+};
+
+export const getAdminCreateClubMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminCreateClub>>,
+    TError,
+    { data: BodyType<AdminClubBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminCreateClub>>,
+  TError,
+  { data: BodyType<AdminClubBody> },
+  TContext
+> => {
+  const mutationKey = ["adminCreateClub"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminCreateClub>>,
+    { data: BodyType<AdminClubBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return adminCreateClub(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminCreateClubMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminCreateClub>>
+>;
+export type AdminCreateClubMutationBody = BodyType<AdminClubBody>;
+export type AdminCreateClubMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Create a new club
+ */
+export const useAdminCreateClub = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminCreateClub>>,
+    TError,
+    { data: BodyType<AdminClubBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminCreateClub>>,
+  TError,
+  { data: BodyType<AdminClubBody> },
+  TContext
+> => {
+  return useMutation(getAdminCreateClubMutationOptions(options));
+};
+
+/**
+ * @summary Update a club
+ */
+export const getAdminUpdateClubUrl = (id: string) => {
+  return `/api/admin/clubs/${id}`;
+};
+
+export const adminUpdateClub = async (
+  id: string,
+  adminClubBody: AdminClubBody,
+  options?: RequestInit,
+): Promise<AdminClub> => {
+  return customFetch<AdminClub>(getAdminUpdateClubUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(adminClubBody),
+  });
+};
+
+export const getAdminUpdateClubMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminUpdateClub>>,
+    TError,
+    { id: string; data: BodyType<AdminClubBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminUpdateClub>>,
+  TError,
+  { id: string; data: BodyType<AdminClubBody> },
+  TContext
+> => {
+  const mutationKey = ["adminUpdateClub"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminUpdateClub>>,
+    { id: string; data: BodyType<AdminClubBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return adminUpdateClub(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminUpdateClubMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminUpdateClub>>
+>;
+export type AdminUpdateClubMutationBody = BodyType<AdminClubBody>;
+export type AdminUpdateClubMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Update a club
+ */
+export const useAdminUpdateClub = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminUpdateClub>>,
+    TError,
+    { id: string; data: BodyType<AdminClubBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminUpdateClub>>,
+  TError,
+  { id: string; data: BodyType<AdminClubBody> },
+  TContext
+> => {
+  return useMutation(getAdminUpdateClubMutationOptions(options));
+};
+
+/**
+ * @summary Delete a club
+ */
+export const getAdminDeleteClubUrl = (id: string) => {
+  return `/api/admin/clubs/${id}`;
+};
+
+export const adminDeleteClub = async (
+  id: string,
+  adminVerifyBody: AdminVerifyBody,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getAdminDeleteClubUrl(id), {
+    ...options,
+    method: "DELETE",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(adminVerifyBody),
+  });
+};
+
+export const getAdminDeleteClubMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminDeleteClub>>,
+    TError,
+    { id: string; data: BodyType<AdminVerifyBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminDeleteClub>>,
+  TError,
+  { id: string; data: BodyType<AdminVerifyBody> },
+  TContext
+> => {
+  const mutationKey = ["adminDeleteClub"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminDeleteClub>>,
+    { id: string; data: BodyType<AdminVerifyBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return adminDeleteClub(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminDeleteClubMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminDeleteClub>>
+>;
+export type AdminDeleteClubMutationBody = BodyType<AdminVerifyBody>;
+export type AdminDeleteClubMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Delete a club
+ */
+export const useAdminDeleteClub = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminDeleteClub>>,
+    TError,
+    { id: string; data: BodyType<AdminVerifyBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminDeleteClub>>,
+  TError,
+  { id: string; data: BodyType<AdminVerifyBody> },
+  TContext
+> => {
+  return useMutation(getAdminDeleteClubMutationOptions(options));
 };
 
 /**

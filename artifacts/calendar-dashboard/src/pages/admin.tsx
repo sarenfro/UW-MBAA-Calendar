@@ -45,7 +45,13 @@ import {
   useAdminCreateCalendar,
   useAdminUpdateCalendar,
   useAdminDeleteCalendar,
+  useAdminListClubs,
+  getAdminListClubsQueryKey,
+  useAdminCreateClub,
+  useAdminUpdateClub,
+  useAdminDeleteClub,
   type AdminCalendar,
+  type AdminClub,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -155,6 +161,417 @@ function PasswordGate({ onUnlock }: { onUnlock: (pw: string) => void }) {
         </div>
       </div>
     </Layout>
+  );
+}
+
+// ─── Club management ──────────────────────────────────────────────────────────
+
+function toSlug(name: string) {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+type ClubFormState = {
+  name: string;
+  slug: string;
+  description: string;
+  isActive: boolean;
+};
+
+const EMPTY_CLUB_FORM: ClubFormState = {
+  name: "",
+  slug: "",
+  description: "",
+  isActive: true,
+};
+
+function ClubRow({
+  club,
+  password,
+  onDeleted,
+  onUpdated,
+}: {
+  club: AdminClub;
+  password: string;
+  onDeleted: () => void;
+  onUpdated: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [form, setForm] = useState<ClubFormState>({
+    name: club.name,
+    slug: club.slug,
+    description: club.description ?? "",
+    isActive: club.isActive,
+  });
+  const { toast } = useToast();
+
+  const updateMutation = useAdminUpdateClub({
+    mutation: {
+      onSuccess: () => {
+        setEditing(false);
+        onUpdated();
+        toast({ title: "Club updated" });
+      },
+      onError: () => toast({ title: "Update failed", variant: "destructive" }),
+    },
+  });
+
+  const deleteMutation = useAdminDeleteClub({
+    mutation: {
+      onSuccess: () => {
+        onDeleted();
+        toast({ title: "Club deleted", description: `"${club.name}" has been removed.` });
+      },
+      onError: () => toast({ title: "Delete failed", variant: "destructive" }),
+    },
+  });
+
+  function handleSave() {
+    updateMutation.mutate({
+      id: club.id,
+      data: {
+        password,
+        name: form.name,
+        slug: form.slug,
+        description: form.description || undefined,
+        isActive: form.isActive,
+      },
+    });
+  }
+
+  function handleDelete() {
+    deleteMutation.mutate({ id: club.id, data: { password } });
+  }
+
+  return (
+    <>
+      <TableRow className="border-b border-border/40 last:border-0 hover:bg-muted/20 align-top">
+        <TableCell className="py-3 w-4">
+          <span
+            className={`inline-block w-2 h-2 rounded-full mt-1 ${form.isActive ? "bg-emerald-500" : "bg-muted-foreground/40"}`}
+          />
+        </TableCell>
+        <TableCell className="py-3 font-medium text-sm min-w-[160px]">
+          {editing ? (
+            <Input
+              value={form.name}
+              onChange={(e) => {
+                const name = e.target.value;
+                setForm((f) => ({ ...f, name, slug: toSlug(name) }));
+              }}
+              className="h-7 text-sm rounded-sm border-border/60 px-2"
+            />
+          ) : (
+            <span>{club.name}</span>
+          )}
+        </TableCell>
+        <TableCell className="py-3 text-sm text-muted-foreground font-mono hidden md:table-cell">
+          {editing ? (
+            <Input
+              value={form.slug}
+              onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }))}
+              className="h-7 text-sm rounded-sm border-border/60 px-2 font-mono"
+            />
+          ) : (
+            <span>{club.slug}</span>
+          )}
+        </TableCell>
+        <TableCell className="py-3 hidden lg:table-cell">
+          {editing ? (
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={form.isActive}
+                onCheckedChange={(v) => setForm((f) => ({ ...f, isActive: v }))}
+                className="scale-75"
+              />
+              <span className="text-xs text-muted-foreground">{form.isActive ? "Active" : "Inactive"}</span>
+            </div>
+          ) : (
+            <span className={`text-xs font-medium ${club.isActive ? "text-emerald-600" : "text-muted-foreground"}`}>
+              {club.isActive ? "Active" : "Inactive"}
+            </span>
+          )}
+        </TableCell>
+        <TableCell className="py-3 text-right">
+          <div className="flex items-center justify-end gap-1">
+            {editing ? (
+              <>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-muted-foreground hover:text-primary"
+                  onClick={handleSave}
+                  disabled={updateMutation.isPending}
+                >
+                  <Check className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                  onClick={() => {
+                    setEditing(false);
+                    setForm({ name: club.name, slug: club.slug, description: club.description ?? "", isActive: club.isActive });
+                  }}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-muted-foreground hover:text-primary"
+                  onClick={() => setEditing(true)}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </>
+            )}
+          </div>
+        </TableCell>
+      </TableRow>
+
+      {editing && (
+        <TableRow className="bg-muted/10 border-b border-border/40">
+          <TableCell />
+          <TableCell colSpan={4} className="py-3">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground">
+                Description
+              </Label>
+              <Input
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                placeholder="Short description…"
+                className="h-7 text-sm rounded-sm border-border/60 px-2 max-w-sm"
+              />
+            </div>
+          </TableCell>
+        </TableRow>
+      )}
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete "{club.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the club and all its membership records and lead assignments. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
+function ClubManagementPanel({ password }: { password: string }) {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [form, setForm] = useState<ClubFormState>(EMPTY_CLUB_FORM);
+  const [addError, setAddError] = useState<string | null>(null);
+
+  const queryKey = getAdminListClubsQueryKey({ password });
+  const { data: clubs, isLoading } = useAdminListClubs(
+    { password },
+    { query: { queryKey } },
+  );
+
+  const createMutation = useAdminCreateClub({
+    mutation: {
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey });
+        setShowAddForm(false);
+        setForm(EMPTY_CLUB_FORM);
+        setAddError(null);
+        toast({ title: "Club added" });
+      },
+      onError: (err: unknown) => {
+        const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+        setAddError(msg ?? "Failed to add club.");
+      },
+    },
+  });
+
+  function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    setAddError(null);
+    if (!form.name.trim()) { setAddError("Name is required."); return; }
+    if (!form.slug.trim()) { setAddError("Slug is required."); return; }
+    createMutation.mutate({
+      data: {
+        password,
+        name: form.name.trim(),
+        slug: form.slug.trim(),
+        description: form.description || undefined,
+        isActive: form.isActive,
+      },
+    });
+  }
+
+  return (
+    <div className="border border-border/60">
+      {isLoading ? (
+        <div className="p-6 space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-full" />
+          ))}
+        </div>
+      ) : clubs && clubs.length > 0 ? (
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-border/60 hover:bg-transparent">
+              <TableHead className="py-3 w-4" />
+              <TableHead className="text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground py-3">
+                Name
+              </TableHead>
+              <TableHead className="text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground py-3 hidden md:table-cell">
+                Slug
+              </TableHead>
+              <TableHead className="text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground py-3 hidden lg:table-cell">
+                Status
+              </TableHead>
+              <TableHead className="py-3 w-24" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {clubs.map((club) => (
+              <ClubRow
+                key={club.id}
+                club={club}
+                password={password}
+                onDeleted={() => qc.invalidateQueries({ queryKey })}
+                onUpdated={() => qc.invalidateQueries({ queryKey })}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      ) : (
+        <div className="py-8 text-center">
+          <p className="text-sm text-muted-foreground italic">No clubs yet.</p>
+        </div>
+      )}
+
+      {/* Add club */}
+      <div className="border-t border-border/60">
+        {showAddForm ? (
+          <form onSubmit={handleAdd} className="p-5 space-y-4">
+            <p className="text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground">
+              New Club
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground">
+                  Name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  value={form.name}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    setForm((f) => ({ ...f, name, slug: toSlug(name) }));
+                  }}
+                  placeholder="Finance Society"
+                  className="h-8 text-sm rounded-sm border-border/60"
+                  autoFocus
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground">
+                  Slug <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  value={form.slug}
+                  onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }))}
+                  placeholder="finance-society"
+                  className="h-8 text-sm rounded-sm border-border/60 font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-[10px] font-semibold tracking-[0.16em] uppercase text-muted-foreground">
+                Description
+              </Label>
+              <Input
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                placeholder="Short description…"
+                className="h-8 text-sm rounded-sm border-border/60"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Switch
+                id="club-active"
+                checked={form.isActive}
+                onCheckedChange={(v) => setForm((f) => ({ ...f, isActive: v }))}
+              />
+              <Label htmlFor="club-active" className="text-sm text-muted-foreground cursor-pointer">
+                Active
+              </Label>
+            </div>
+
+            {addError && (
+              <p className="text-xs text-destructive">{addError}</p>
+            )}
+
+            <div className="flex items-center gap-2 pt-1">
+              <Button
+                type="submit"
+                disabled={createMutation.isPending}
+                size="sm"
+                className="rounded-sm text-xs font-semibold tracking-[0.14em] uppercase"
+              >
+                {createMutation.isPending ? "Adding…" : "Add Club"}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="rounded-sm text-xs text-muted-foreground"
+                onClick={() => { setShowAddForm(false); setForm(EMPTY_CLUB_FORM); setAddError(null); }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowAddForm(true)}
+            className="w-full flex items-center gap-2 px-5 py-3 text-xs font-semibold tracking-[0.14em] uppercase text-muted-foreground hover:text-primary hover:bg-muted/20 transition-colors"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add Club
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -976,6 +1393,17 @@ function AdminContent({ onLock, password }: { onLock: () => void; password: stri
             Add, edit, or remove calendar ICS feeds. Deleting a calendar also removes all its synced events.
           </p>
           <CalendarManagementPanel password={password} />
+        </div>
+
+        <Separator />
+
+        {/* Club Management */}
+        <div>
+          <SectionLabel>Clubs</SectionLabel>
+          <p className="text-sm text-muted-foreground mb-4">
+            Add, edit, or remove clubs. Deleting a club also removes all its membership records and lead assignments.
+          </p>
+          <ClubManagementPanel password={password} />
         </div>
 
         <Separator />

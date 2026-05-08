@@ -239,6 +239,27 @@ export interface AdminCalendarBody {
   defaultHidden?: boolean;
 }
 
+export interface AdminClub {
+  id: string;
+  name: string;
+  slug: string;
+  /** @nullable */
+  description: string | null;
+  /** @nullable */
+  calendarId: number | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface AdminClubBody {
+  password: string;
+  name: string;
+  slug: string;
+  description?: string;
+  calendarId?: number;
+  isActive?: boolean;
+}
+
 export interface AdminVerifyBody {
   password: string;
 }
@@ -300,6 +321,10 @@ export type SearchMembersParams = {
 };
 
 export type AdminListCalendarsParams = {
+  password: string;
+};
+
+export type AdminListClubsParams = {
   password: string;
 };
 

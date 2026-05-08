@@ -476,6 +476,138 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /admin/clubs:
+    get:
+      operationId: adminListClubs
+      tags: [admin]
+      summary: List all clubs (admin)
+      parameters:
+        - in: query
+          name: password
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: All clubs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminClub"
+        "401":
+          description: Wrong password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: adminCreateClub
+      tags: [admin]
+      summary: Create a new club
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminClubBody"
+      responses:
+        "201":
+          description: Club created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminClub"
+        "400":
+          description: Invalid body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Wrong password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/clubs/{id}:
+    patch:
+      operationId: adminUpdateClub
+      tags: [admin]
+      summary: Update a club
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminClubBody"
+      responses:
+        "200":
+          description: Club updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminClub"
+        "400":
+          description: Invalid body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Wrong password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Club not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: adminDeleteClub
+      tags: [admin]
+      summary: Delete a club
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminVerifyBody"
+      responses:
+        "204":
+          description: Club deleted
+        "401":
+          description: Wrong password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Club not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /admin/verify:
     post:
       operationId: verifyAdminPassword
@@ -1182,6 +1314,54 @@ components:
         - name
         - color
         - owner
+
+    AdminClub:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: ["string", "null"]
+        calendarId:
+          type: ["integer", "null"]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - slug
+        - description
+        - calendarId
+        - isActive
+        - createdAt
+
+    AdminClubBody:
+      type: object
+      properties:
+        password:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        calendarId:
+          type: integer
+        isActive:
+          type: boolean
+      required:
+        - password
+        - name
+        - slug
 
     AdminVerifyBody:
       type: object

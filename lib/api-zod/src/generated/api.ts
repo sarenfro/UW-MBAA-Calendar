@@ -470,6 +470,73 @@ export const AdminDeleteCalendarBody = zod.object({
 });
 
 /**
+ * @summary List all clubs (admin)
+ */
+export const AdminListClubsQueryParams = zod.object({
+  password: zod.coerce.string(),
+});
+
+export const AdminListClubsResponseItem = zod.object({
+  id: zod.string().uuid(),
+  name: zod.string(),
+  slug: zod.string(),
+  description: zod.string().nullable(),
+  calendarId: zod.number().nullable(),
+  isActive: zod.boolean(),
+  createdAt: zod.coerce.date(),
+});
+export const AdminListClubsResponse = zod.array(AdminListClubsResponseItem);
+
+/**
+ * @summary Create a new club
+ */
+export const AdminCreateClubBody = zod.object({
+  password: zod.string(),
+  name: zod.string(),
+  slug: zod.string(),
+  description: zod.string().optional(),
+  calendarId: zod.number().optional(),
+  isActive: zod.boolean().optional(),
+});
+
+/**
+ * @summary Update a club
+ */
+export const AdminUpdateClubParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+export const AdminUpdateClubBody = zod.object({
+  password: zod.string(),
+  name: zod.string(),
+  slug: zod.string(),
+  description: zod.string().optional(),
+  calendarId: zod.number().optional(),
+  isActive: zod.boolean().optional(),
+});
+
+export const AdminUpdateClubResponse = zod.object({
+  id: zod.string().uuid(),
+  name: zod.string(),
+  slug: zod.string(),
+  description: zod.string().nullable(),
+  calendarId: zod.number().nullable(),
+  isActive: zod.boolean(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete a club
+ */
+export const AdminDeleteClubParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+export const AdminDeleteClubBody = zod.object({
+  password: zod.string(),
+});
+
+/**
  * @summary Verify the admin password
  */
 export const VerifyAdminPasswordBody = zod.object({

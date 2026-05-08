@@ -1,7 +1,7 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import { z } from "zod/v4";
 import { eq } from "drizzle-orm";
-import { db, calendarsTable, eventsTable } from "@workspace/db";
+import { db, calendarsTable, eventsTable, clubsTable } from "@workspace/db";
 import { syncAllCalendars } from "../lib/sync-calendars";
 
 const router: IRouter = Router();
@@ -153,6 +153,120 @@ router.delete("/admin/calendars/:id", requireAdmin, async (req, res): Promise<vo
   await db.delete(eventsTable).where(eq(eventsTable.calendarId, id));
   await db.delete(calendarsTable).where(eq(calendarsTable.id, id));
   req.log.info({ id }, "admin: calendar deleted");
+  res.status(204).send();
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/admin/clubs — list all clubs
+// ---------------------------------------------------------------------------
+router.get("/admin/clubs", requireAdmin, async (req, res): Promise<void> => {
+  const rows = await db.select().from(clubsTable).orderBy(clubsTable.name);
+  res.json(
+    rows.map((c) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      description: c.description,
+      calendarId: c.calendarId,
+      isActive: c.isActive,
+      createdAt: c.createdAt.toISOString(),
+    })),
+  );
+});
+
+const clubBodySchema = z.object({
+  password: z.string(),
+  name: z.string().min(1),
+  slug: z.string().min(1).regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens"),
+  description: z.string().optional(),
+  calendarId: z.number().int().optional(),
+  isActive: z.boolean().optional(),
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/admin/clubs — create a club
+// ---------------------------------------------------------------------------
+router.post("/admin/clubs", requireAdmin, async (req, res): Promise<void> => {
+  const parsed = clubBodySchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid body", details: parsed.error.issues });
+    return;
+  }
+  const { password: _pw, ...fields } = parsed.data;
+  const [existing] = await db.select({ id: clubsTable.id }).from(clubsTable)
+    .where(eq(clubsTable.slug, fields.slug));
+  if (existing) {
+    res.status(409).json({ error: "A club with that slug already exists" });
+    return;
+  }
+  const [row] = await db.insert(clubsTable).values({
+    name: fields.name,
+    slug: fields.slug,
+    description: fields.description ?? null,
+    calendarId: fields.calendarId ?? null,
+    isActive: fields.isActive ?? true,
+  }).returning();
+  req.log.info({ id: row.id, name: row.name }, "admin: club created");
+  res.status(201).json({
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    description: row.description,
+    calendarId: row.calendarId,
+    isActive: row.isActive,
+    createdAt: row.createdAt.toISOString(),
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PATCH /api/admin/clubs/:id — update a club
+// ---------------------------------------------------------------------------
+router.patch("/admin/clubs/:id", requireAdmin, async (req, res): Promise<void> => {
+  const { id } = req.params;
+  const parsed = clubBodySchema.partial().safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid body" });
+    return;
+  }
+  const { password: _pw, ...fields } = parsed.data;
+  const [existing] = await db.select().from(clubsTable).where(eq(clubsTable.id, id));
+  if (!existing) {
+    res.status(404).json({ error: "Club not found" });
+    return;
+  }
+  const [row] = await db.update(clubsTable).set({
+    ...(fields.name !== undefined && { name: fields.name }),
+    ...(fields.slug !== undefined && { slug: fields.slug }),
+    ...(fields.description !== undefined && { description: fields.description }),
+    ...(fields.calendarId !== undefined && { calendarId: fields.calendarId }),
+    ...(fields.isActive !== undefined && { isActive: fields.isActive }),
+    updatedAt: new Date(),
+  }).where(eq(clubsTable.id, id)).returning();
+  req.log.info({ id: row.id, name: row.name }, "admin: club updated");
+  res.json({
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    description: row.description,
+    calendarId: row.calendarId,
+    isActive: row.isActive,
+    createdAt: row.createdAt.toISOString(),
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DELETE /api/admin/clubs/:id — delete a club and all its memberships/leads
+// ---------------------------------------------------------------------------
+router.delete("/admin/clubs/:id", requireAdmin, async (req, res): Promise<void> => {
+  const { id } = req.params;
+  const [existing] = await db.select({ id: clubsTable.id }).from(clubsTable).where(eq(clubsTable.id, id));
+  if (!existing) {
+    res.status(404).json({ error: "Club not found" });
+    return;
+  }
+  // Cascade deletes handle memberships, club_leads, and lead_access_tokens automatically
+  await db.delete(clubsTable).where(eq(clubsTable.id, id));
+  req.log.info({ id }, "admin: club deleted");
   res.status(204).send();
 });
 
