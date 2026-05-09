@@ -1,21 +1,25 @@
 import { useState, useEffect } from "react";
 import { useListCalendars } from "@workspace/api-client-react";
 
-const EXCLUDED_CALENDAR_NAMES: string[] = [];
+const DEFAULT_HIDDEN_CALENDAR_NAMES = ["UW Foster Undergraduate Events"];
 
 export function useCalendarFilters() {
   const { data: calendarsRaw } = useListCalendars();
 
-  const calendars = calendarsRaw?.filter(
-    (c) => !EXCLUDED_CALENDAR_NAMES.includes(c.name)
-  );
+  const calendars = calendarsRaw;
 
   const [hiddenCalendarIds, setHiddenCalendarIds] = useState<Set<number>>(new Set());
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     if (calendars && !initialized) {
-      setHiddenCalendarIds(new Set(calendars.filter((c) => c.defaultHidden).map((c) => c.id)));
+      setHiddenCalendarIds(
+        new Set(
+          calendars
+            .filter((c) => c.defaultHidden || DEFAULT_HIDDEN_CALENDAR_NAMES.includes(c.name))
+            .map((c) => c.id),
+        ),
+      );
       setInitialized(true);
     }
   }, [calendars, initialized]);
