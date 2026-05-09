@@ -178,7 +178,6 @@ function toSlug(name: string) {
 
 const EXCLUDED_CLUB_CALENDAR_NAMES = [
   "UW Foster MBAA",
-  "UW Foster Undergraduate Events",
   "Career Management",
 ];
 
