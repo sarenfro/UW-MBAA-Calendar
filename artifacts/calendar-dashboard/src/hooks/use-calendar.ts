@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useListCalendars } from "@workspace/api-client-react";
 
-const EXCLUDED_CALENDAR_NAMES = ["UW Foster Undergraduate Events"];
+const EXCLUDED_CALENDAR_NAMES: string[] = [];
 
 export function useCalendarFilters() {
   const { data: calendarsRaw } = useListCalendars();
