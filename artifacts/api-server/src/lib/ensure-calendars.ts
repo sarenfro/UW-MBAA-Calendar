@@ -47,6 +47,7 @@ const CANONICAL_CALENDARS = [
 ] as const;
 
 export async function ensureCalendars(): Promise<void> {
+  // Include inactive rows so soft-deleted calendars are not re-inserted
   const existing = await db
     .select({ subscriptionUrl: calendarsTable.subscriptionUrl })
     .from(calendarsTable);

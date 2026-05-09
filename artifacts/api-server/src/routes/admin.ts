@@ -58,7 +58,11 @@ router.post("/admin/sync-calendars", requireAdmin, async (req, res): Promise<voi
 // GET /api/admin/calendars — list all calendars including subscriptionUrl
 // ---------------------------------------------------------------------------
 router.get("/admin/calendars", requireAdmin, async (req, res): Promise<void> => {
-  const rows = await db.select().from(calendarsTable).orderBy(calendarsTable.id);
+  const rows = await db
+    .select()
+    .from(calendarsTable)
+    .where(eq(calendarsTable.isActive, true))
+    .orderBy(calendarsTable.name);
   res.json(rows);
 });
 
@@ -137,7 +141,7 @@ router.patch("/admin/calendars/:id", requireAdmin, async (req, res): Promise<voi
 });
 
 // ---------------------------------------------------------------------------
-// DELETE /api/admin/calendars/:id — delete a calendar and its events
+// DELETE /api/admin/calendars/:id — soft-delete a calendar (isActive=false) and wipe its events
 // ---------------------------------------------------------------------------
 router.delete("/admin/calendars/:id", requireAdmin, async (req, res): Promise<void> => {
   const id = Number(req.params.id);
@@ -151,8 +155,8 @@ router.delete("/admin/calendars/:id", requireAdmin, async (req, res): Promise<vo
     return;
   }
   await db.delete(eventsTable).where(eq(eventsTable.calendarId, id));
-  await db.delete(calendarsTable).where(eq(calendarsTable.id, id));
-  req.log.info({ id }, "admin: calendar deleted");
+  await db.update(calendarsTable).set({ isActive: false }).where(eq(calendarsTable.id, id));
+  req.log.info({ id }, "admin: calendar soft-deleted");
   res.status(204).send();
 });
 

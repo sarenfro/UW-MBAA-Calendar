@@ -11,6 +11,7 @@ export const calendarsTable = pgTable("calendars", {
   owner: text("owner").notNull(),
   subscriptionUrl: text("subscription_url"),
   defaultHidden: boolean("default_hidden").notNull().default(false),
+  isActive: boolean("is_active").notNull().default(true),
 });
 
 export const insertCalendarSchema = createInsertSchema(calendarsTable).omit({
