@@ -202,6 +202,23 @@ export default function Home() {
               <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </div>
           </a>
+          <a
+            href="https://vote-booth.replit.app/voting-booth/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group bg-background hover:bg-card transition-colors p-5 flex flex-col gap-2 min-h-[90px]"
+          >
+            <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-primary">
+              06 · Voting
+            </p>
+            <h3 className="font-serif text-2xl tracking-tight leading-tight flex-1">
+              MBAA <em className="italic font-light">Voting Booth</em>
+            </h3>
+            <div className="flex items-center justify-between text-sm text-muted-foreground group-hover:text-primary transition-colors">
+              <span>cast your vote on MBAA decisions</span>
+              <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </div>
+          </a>
         </div>
         <div className="mt-8 flex justify-center">
           <Link
