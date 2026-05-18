@@ -662,3 +662,85 @@ export const DownloadClubRosterCsvQueryParams = zod.object({
     .string()
     .describe("Magic link token (already-used tokens accepted)"),
 });
+
+/**
+ * @summary Get current quarter student leader entry
+ */
+export const GetStudentLeaderCurrentResponse = zod.object({
+  id: zod.number(),
+  quarter: zod.string(),
+  status: zod.string(),
+  winnerName: zod.string().nullable(),
+  winnerClub: zod.string().nullable(),
+  winnerProgram: zod.string().nullable(),
+  winnerBio: zod.string().nullable(),
+  winnerPhotoUrl: zod.string().nullable(),
+  nominatedBy: zod.string().nullable(),
+  reason: zod.string().nullable(),
+  isCurrent: zod.boolean(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary List past student leader winners
+ */
+export const ListStudentLeaderHistoryResponseItem = zod.object({
+  id: zod.number(),
+  quarter: zod.string(),
+  status: zod.string(),
+  winnerName: zod.string().nullable(),
+  winnerClub: zod.string().nullable(),
+  winnerProgram: zod.string().nullable(),
+  winnerBio: zod.string().nullable(),
+  winnerPhotoUrl: zod.string().nullable(),
+  nominatedBy: zod.string().nullable(),
+  reason: zod.string().nullable(),
+  isCurrent: zod.boolean(),
+  createdAt: zod.coerce.date(),
+});
+export const ListStudentLeaderHistoryResponse = zod.array(
+  ListStudentLeaderHistoryResponseItem,
+);
+
+/**
+ * @summary Update a student leader entry
+ */
+export const AdminUpdateStudentLeaderParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AdminUpdateStudentLeaderBody = zod.object({
+  password: zod.string(),
+  quarter: zod.string().optional(),
+  status: zod.string().optional(),
+  winnerName: zod.string().optional(),
+  winnerClub: zod.string().optional(),
+  winnerProgram: zod.string().optional(),
+  winnerBio: zod.string().optional(),
+  winnerPhotoUrl: zod.string().optional(),
+  nominatedBy: zod.string().optional(),
+  reason: zod.string().optional(),
+});
+
+export const AdminUpdateStudentLeaderResponse = zod.object({
+  id: zod.number(),
+  quarter: zod.string(),
+  status: zod.string(),
+  winnerName: zod.string().nullable(),
+  winnerClub: zod.string().nullable(),
+  winnerProgram: zod.string().nullable(),
+  winnerBio: zod.string().nullable(),
+  winnerPhotoUrl: zod.string().nullable(),
+  nominatedBy: zod.string().nullable(),
+  reason: zod.string().nullable(),
+  isCurrent: zod.boolean(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Archive current quarter and create the next one
+ */
+export const AdminAdvanceStudentLeaderQuarterBody = zod.object({
+  password: zod.string(),
+  nextQuarter: zod.string(),
+});

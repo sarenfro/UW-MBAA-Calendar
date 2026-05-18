@@ -7,6 +7,7 @@
  */
 
 export * from "./addClubLeadBody";
+export * from "./adminAdvanceQuarterBody";
 export * from "./adminCalendar";
 export * from "./adminCalendarBody";
 export * from "./adminClub";
@@ -14,6 +15,7 @@ export * from "./adminClubBody";
 export * from "./adminClubReorderBody";
 export * from "./adminListCalendarsParams";
 export * from "./adminListClubsParams";
+export * from "./adminStudentLeaderBody";
 export * from "./adminVerifyBody";
 export * from "./adminVerifyResponse";
 export * from "./calendar";
@@ -48,6 +50,7 @@ export * from "./rosterMember";
 export * from "./rosterMemberProgram";
 export * from "./rosterMembership";
 export * from "./searchMembersParams";
+export * from "./studentLeaderEntry";
 export * from "./tokenErrorResponse";
 export * from "./tokenErrorResponseCode";
 export * from "./topClub";

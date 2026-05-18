@@ -817,6 +817,86 @@ paths:
               schema:
                 $ref: "#/components/schemas/TokenErrorResponse"
 
+  /student-leader/current:
+    get:
+      operationId: getStudentLeaderCurrent
+      tags: [admin]
+      summary: Get current quarter student leader entry
+      responses:
+        "200":
+          description: Current student leader entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentLeaderEntry"
+        "404":
+          description: No current entry found
+
+  /student-leader/history:
+    get:
+      operationId: listStudentLeaderHistory
+      tags: [admin]
+      summary: List past student leader winners
+      responses:
+        "200":
+          description: Past winners
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudentLeaderEntry"
+
+  /admin/student-leader/{id}:
+    patch:
+      operationId: adminUpdateStudentLeader
+      tags: [admin]
+      summary: Update a student leader entry
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminStudentLeaderBody"
+      responses:
+        "200":
+          description: Updated entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentLeaderEntry"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+
+  /admin/student-leader/advance:
+    post:
+      operationId: adminAdvanceStudentLeaderQuarter
+      tags: [admin]
+      summary: Archive current quarter and create the next one
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminAdvanceQuarterBody"
+      responses:
+        "201":
+          description: New quarter entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentLeaderEntry"
+        "401":
+          description: Unauthorized
+
 components:
   schemas:
     HealthStatus:
@@ -1391,6 +1471,85 @@ components:
         - password
         - name
         - slug
+
+    StudentLeaderEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        quarter:
+          type: string
+        status:
+          type: string
+        winnerName:
+          type: ["string", "null"]
+        winnerClub:
+          type: ["string", "null"]
+        winnerProgram:
+          type: ["string", "null"]
+        winnerBio:
+          type: ["string", "null"]
+        winnerPhotoUrl:
+          type: ["string", "null"]
+        nominatedBy:
+          type: ["string", "null"]
+        reason:
+          type: ["string", "null"]
+        isCurrent:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - quarter
+        - status
+        - winnerName
+        - winnerClub
+        - winnerProgram
+        - winnerBio
+        - winnerPhotoUrl
+        - nominatedBy
+        - reason
+        - isCurrent
+        - createdAt
+
+    AdminStudentLeaderBody:
+      type: object
+      properties:
+        password:
+          type: string
+        quarter:
+          type: string
+        status:
+          type: string
+        winnerName:
+          type: string
+        winnerClub:
+          type: string
+        winnerProgram:
+          type: string
+        winnerBio:
+          type: string
+        winnerPhotoUrl:
+          type: string
+        nominatedBy:
+          type: string
+        reason:
+          type: string
+      required:
+        - password
+
+    AdminAdvanceQuarterBody:
+      type: object
+      properties:
+        password:
+          type: string
+        nextQuarter:
+          type: string
+      required:
+        - password
+        - nextQuarter
 
     AdminClubReorderBody:
       type: object

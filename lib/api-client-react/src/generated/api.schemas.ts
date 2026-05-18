@@ -261,6 +261,46 @@ export interface AdminClubBody {
   displayOrder?: number;
 }
 
+export interface StudentLeaderEntry {
+  id: number;
+  quarter: string;
+  status: string;
+  /** @nullable */
+  winnerName: string | null;
+  /** @nullable */
+  winnerClub: string | null;
+  /** @nullable */
+  winnerProgram: string | null;
+  /** @nullable */
+  winnerBio: string | null;
+  /** @nullable */
+  winnerPhotoUrl: string | null;
+  /** @nullable */
+  nominatedBy: string | null;
+  /** @nullable */
+  reason: string | null;
+  isCurrent: boolean;
+  createdAt: string;
+}
+
+export interface AdminStudentLeaderBody {
+  password: string;
+  quarter?: string;
+  status?: string;
+  winnerName?: string;
+  winnerClub?: string;
+  winnerProgram?: string;
+  winnerBio?: string;
+  winnerPhotoUrl?: string;
+  nominatedBy?: string;
+  reason?: string;
+}
+
+export interface AdminAdvanceQuarterBody {
+  password: string;
+  nextQuarter: string;
+}
+
 export interface AdminClubReorderBody {
   password: string;
   clubIds: string[];

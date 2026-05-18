@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Trash2, Plus, ShieldAlert, Lock, RefreshCw, Pencil, X, Check, ChevronDown, ChevronUp, ArrowUpDown, ArrowUp, ArrowDown, Shuffle } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, ShieldAlert, Lock, RefreshCw, Pencil, X, Check, ChevronDown, ChevronUp, ArrowUpDown, ArrowUp, ArrowDown, Shuffle, Award, Camera, RotateCcw } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -51,8 +52,13 @@ import {
   useAdminUpdateClub,
   useAdminDeleteClub,
   useAdminReorderClubs,
+  useGetStudentLeaderCurrent,
+  getGetStudentLeaderCurrentQueryKey,
+  useAdminUpdateStudentLeader,
+  useAdminAdvanceStudentLeaderQuarter,
   type AdminCalendar,
   type AdminClub,
+  type StudentLeaderEntry,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -1414,6 +1420,335 @@ function ClubLeadsPanel({ slug, clubName }: { slug: string; clubName: string }) 
   );
 }
 
+// ─── Student Leader Panel ──────────────────────────────────────────────────────
+
+const QUARTER_STATUSES = [
+  { value: "nominations_open", label: "Nominations Open" },
+  { value: "nominations_closed", label: "Nominations Closed / Voting" },
+  { value: "announced", label: "Winner Announced" },
+] as const;
+
+function StudentLeaderPanel({ password }: { password: string }) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const { data: current, isLoading } = useGetStudentLeaderCurrent();
+
+  const [draft, setDraft] = useState<Partial<StudentLeaderEntry>>({});
+  const [editing, setEditing] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [advanceOpen, setAdvanceOpen] = useState(false);
+  const [nextQuarter, setNextQuarter] = useState("");
+
+  const updateMutation = useAdminUpdateStudentLeader({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetStudentLeaderCurrentQueryKey() });
+        toast({ title: "Saved", description: "Student leader entry updated." });
+        setEditing(false);
+      },
+      onError: () => toast({ title: "Error", description: "Failed to save.", variant: "destructive" }),
+    },
+  });
+
+  const advanceMutation = useAdminAdvanceStudentLeaderQuarter({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetStudentLeaderCurrentQueryKey() });
+        toast({ title: "Quarter advanced", description: `New quarter "${nextQuarter}" created.` });
+        setAdvanceOpen(false);
+        setNextQuarter("");
+      },
+      onError: () => toast({ title: "Error", description: "Failed to advance quarter.", variant: "destructive" }),
+    },
+  });
+
+  function startEdit() {
+    if (!current) return;
+    setDraft({
+      status: current.status,
+      winnerName: current.winnerName ?? "",
+      winnerClub: current.winnerClub ?? "",
+      winnerProgram: current.winnerProgram ?? "",
+      winnerBio: current.winnerBio ?? "",
+      nominatedBy: current.nominatedBy ?? "",
+      reason: current.reason ?? "",
+    });
+    setEditing(true);
+  }
+
+  function handleSave() {
+    if (!current) return;
+    updateMutation.mutate({
+      id: current.id,
+      data: {
+        status: (draft.status as "nominations_open" | "nominations_closed" | "announced") ?? current.status,
+        winnerName: draft.winnerName || undefined,
+        winnerClub: draft.winnerClub || undefined,
+        winnerProgram: draft.winnerProgram || undefined,
+        winnerBio: draft.winnerBio || undefined,
+        nominatedBy: draft.nominatedBy || undefined,
+        reason: draft.reason || undefined,
+        password,
+      },
+    });
+  }
+
+  async function handlePhotoUpload(file: File) {
+    if (!current) return;
+    setUploadingPhoto(true);
+    try {
+      const form = new FormData();
+      form.append("photo", file);
+      const res = await fetch(`/api/admin/student-leader/${current.id}/photo?password=${encodeURIComponent(password)}`, {
+        method: "POST",
+        body: form,
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      await queryClient.invalidateQueries({ queryKey: getGetStudentLeaderCurrentQueryKey() });
+      toast({ title: "Photo uploaded" });
+    } catch {
+      toast({ title: "Error", description: "Photo upload failed.", variant: "destructive" });
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
+
+  if (isLoading) return <Skeleton className="h-32 w-full" />;
+
+  const statusLabel = QUARTER_STATUSES.find((s) => s.value === current?.status)?.label ?? current?.status ?? "—";
+
+  return (
+    <div className="space-y-6">
+      {/* Current quarter header */}
+      <div className="border border-border/60 p-5">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-xs font-semibold tracking-[0.16em] uppercase text-muted-foreground mb-1">
+              {current ? current.quarter : "No active quarter"}
+            </p>
+            {current && (
+              <p className="text-sm text-foreground">
+                Status:{" "}
+                <span className={`font-semibold ${
+                  current.status === "announced" ? "text-emerald-600" :
+                  current.status === "nominations_closed" ? "text-amber-600" :
+                  "text-primary"
+                }`}>{statusLabel}</span>
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {current && !editing && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-sm h-8 text-xs font-semibold tracking-[0.14em] uppercase gap-1.5 border-border/60"
+                onClick={startEdit}
+              >
+                <Pencil className="h-3 w-3" />
+                Edit
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-sm h-8 text-xs font-semibold tracking-[0.14em] uppercase gap-1.5 border-border/60"
+              onClick={() => setAdvanceOpen(true)}
+            >
+              <RotateCcw className="h-3 w-3" />
+              Advance Quarter
+            </Button>
+          </div>
+        </div>
+
+        {/* Photo row */}
+        {current && (
+          <div className="mt-4 flex items-center gap-4">
+            {current.winnerPhotoUrl ? (
+              <img
+                src={current.winnerPhotoUrl}
+                alt="Winner"
+                className="w-14 h-14 rounded-full object-cover border border-border/60"
+              />
+            ) : (
+              <div className="w-14 h-14 rounded-full bg-muted/40 border border-border/60 flex items-center justify-center">
+                <Award className="h-5 w-5 text-muted-foreground/40" />
+              </div>
+            )}
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Winner photo</p>
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) void handlePhotoUpload(file);
+                  }}
+                />
+                <span className={`inline-flex items-center gap-1.5 text-xs font-semibold tracking-[0.14em] uppercase border border-border/60 rounded-sm px-2 py-1 hover:bg-muted/30 transition-colors ${uploadingPhoto ? "opacity-50 pointer-events-none" : ""}`}>
+                  <Camera className="h-3 w-3" />
+                  {uploadingPhoto ? "Uploading…" : "Upload Photo"}
+                </span>
+              </label>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Edit form */}
+      {editing && current && (
+        <div className="border border-primary/20 p-5 space-y-4">
+          <p className="text-xs font-semibold tracking-[0.18em] uppercase text-primary mb-3">Editing {current.quarter}</p>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label className="text-xs">Status</Label>
+              <Select
+                value={draft.status as string}
+                onValueChange={(v) => setDraft((d) => ({ ...d, status: v as StudentLeaderEntry["status"] }))}
+              >
+                <SelectTrigger className="rounded-sm h-9 text-sm border-border/60">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {QUARTER_STATUSES.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs">Winner Name</Label>
+              <Input
+                value={draft.winnerName ?? ""}
+                onChange={(e) => setDraft((d) => ({ ...d, winnerName: e.target.value }))}
+                placeholder="Full name"
+                className="rounded-sm h-9 text-sm border-border/60"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs">Club / Organization</Label>
+              <Input
+                value={draft.winnerClub ?? ""}
+                onChange={(e) => setDraft((d) => ({ ...d, winnerClub: e.target.value }))}
+                placeholder="e.g. Finance Club"
+                className="rounded-sm h-9 text-sm border-border/60"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs">Program</Label>
+              <Input
+                value={draft.winnerProgram ?? ""}
+                onChange={(e) => setDraft((d) => ({ ...d, winnerProgram: e.target.value }))}
+                placeholder="e.g. MBA, MSBA"
+                className="rounded-sm h-9 text-sm border-border/60"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs">Nominated By</Label>
+              <Input
+                value={draft.nominatedBy ?? ""}
+                onChange={(e) => setDraft((d) => ({ ...d, nominatedBy: e.target.value }))}
+                placeholder="Name or 'Anonymous'"
+                className="rounded-sm h-9 text-sm border-border/60"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Bio / Accomplishments</Label>
+            <Textarea
+              value={draft.winnerBio ?? ""}
+              onChange={(e) => setDraft((d) => ({ ...d, winnerBio: e.target.value }))}
+              placeholder="Briefly describe why this person was selected…"
+              rows={3}
+              className="rounded-sm text-sm border-border/60 resize-none"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Nomination Quote / Reason</Label>
+            <Textarea
+              value={draft.reason ?? ""}
+              onChange={(e) => setDraft((d) => ({ ...d, reason: e.target.value }))}
+              placeholder="Quoted nomination reason to display publicly…"
+              rows={3}
+              className="rounded-sm text-sm border-border/60 resize-none"
+            />
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <Button
+              size="sm"
+              className="rounded-sm h-8 text-xs font-semibold tracking-[0.14em] uppercase gap-1.5"
+              onClick={handleSave}
+              disabled={updateMutation.isPending}
+            >
+              <Check className="h-3 w-3" />
+              {updateMutation.isPending ? "Saving…" : "Save Changes"}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-sm h-8 text-xs font-semibold tracking-[0.14em] uppercase gap-1.5 border-border/60"
+              onClick={() => setEditing(false)}
+            >
+              <X className="h-3 w-3" />
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Advance Quarter dialog */}
+      <AlertDialog open={advanceOpen} onOpenChange={setAdvanceOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Advance to Next Quarter</AlertDialogTitle>
+            <AlertDialogDescription>
+              The current quarter will be archived and a new one will open for nominations.
+              Enter the name for the new quarter (e.g. "Summer 2026").
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="px-6 pb-2">
+            <Input
+              value={nextQuarter}
+              onChange={(e) => setNextQuarter(e.target.value)}
+              placeholder="Summer 2026"
+              className="rounded-sm h-9 text-sm border-border/60"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && nextQuarter.trim()) {
+                  advanceMutation.mutate({ data: { nextQuarter: nextQuarter.trim(), password } });
+                }
+              }}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (nextQuarter.trim()) {
+                  advanceMutation.mutate({ data: { nextQuarter: nextQuarter.trim(), password } });
+                }
+              }}
+              disabled={!nextQuarter.trim() || advanceMutation.isPending}
+            >
+              {advanceMutation.isPending ? "Advancing…" : "Advance Quarter"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
 // ─── Admin content ────────────────────────────────────────────────────────────
 
 function AdminContent({ onLock, password }: { onLock: () => void; password: string }) {
@@ -1572,6 +1907,18 @@ function AdminContent({ onLock, password }: { onLock: () => void; password: stri
             </p>
           </div>
         )}
+
+        <Separator />
+
+        {/* Student Leader of the Quarter */}
+        <div>
+          <SectionLabel>Student Leader of the Quarter</SectionLabel>
+          <p className="text-sm text-muted-foreground mb-4">
+            Manage the current quarter's status, winner details, photo, and advance to a new quarter when voting closes.
+          </p>
+          <StudentLeaderPanel password={password} />
+        </div>
+
       </div>
     </Layout>
   );

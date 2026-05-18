@@ -18,6 +18,7 @@ import type {
 
 import type {
   AddClubLeadBody,
+  AdminAdvanceQuarterBody,
   AdminCalendar,
   AdminCalendarBody,
   AdminClub,
@@ -25,6 +26,7 @@ import type {
   AdminClubReorderBody,
   AdminListCalendarsParams,
   AdminListClubsParams,
+  AdminStudentLeaderBody,
   AdminVerifyBody,
   AdminVerifyResponse,
   Calendar,
@@ -47,6 +49,7 @@ import type {
   RequestAccessBody,
   RequestAccessResponse,
   SearchMembersParams,
+  StudentLeaderEntry,
   TokenErrorResponse,
 } from "./api.schemas";
 
@@ -2614,3 +2617,335 @@ export function useDownloadClubRosterCsv<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Get current quarter student leader entry
+ */
+export const getGetStudentLeaderCurrentUrl = () => {
+  return `/api/student-leader/current`;
+};
+
+export const getStudentLeaderCurrent = async (
+  options?: RequestInit,
+): Promise<StudentLeaderEntry> => {
+  return customFetch<StudentLeaderEntry>(getGetStudentLeaderCurrentUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetStudentLeaderCurrentQueryKey = () => {
+  return [`/api/student-leader/current`] as const;
+};
+
+export const getGetStudentLeaderCurrentQueryOptions = <
+  TData = Awaited<ReturnType<typeof getStudentLeaderCurrent>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getStudentLeaderCurrent>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetStudentLeaderCurrentQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getStudentLeaderCurrent>>
+  > = ({ signal }) => getStudentLeaderCurrent({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getStudentLeaderCurrent>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetStudentLeaderCurrentQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getStudentLeaderCurrent>>
+>;
+export type GetStudentLeaderCurrentQueryError = ErrorType<void>;
+
+/**
+ * @summary Get current quarter student leader entry
+ */
+
+export function useGetStudentLeaderCurrent<
+  TData = Awaited<ReturnType<typeof getStudentLeaderCurrent>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getStudentLeaderCurrent>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetStudentLeaderCurrentQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List past student leader winners
+ */
+export const getListStudentLeaderHistoryUrl = () => {
+  return `/api/student-leader/history`;
+};
+
+export const listStudentLeaderHistory = async (
+  options?: RequestInit,
+): Promise<StudentLeaderEntry[]> => {
+  return customFetch<StudentLeaderEntry[]>(getListStudentLeaderHistoryUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListStudentLeaderHistoryQueryKey = () => {
+  return [`/api/student-leader/history`] as const;
+};
+
+export const getListStudentLeaderHistoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof listStudentLeaderHistory>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listStudentLeaderHistory>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListStudentLeaderHistoryQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listStudentLeaderHistory>>
+  > = ({ signal }) => listStudentLeaderHistory({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listStudentLeaderHistory>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListStudentLeaderHistoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listStudentLeaderHistory>>
+>;
+export type ListStudentLeaderHistoryQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List past student leader winners
+ */
+
+export function useListStudentLeaderHistory<
+  TData = Awaited<ReturnType<typeof listStudentLeaderHistory>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listStudentLeaderHistory>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListStudentLeaderHistoryQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update a student leader entry
+ */
+export const getAdminUpdateStudentLeaderUrl = (id: number) => {
+  return `/api/admin/student-leader/${id}`;
+};
+
+export const adminUpdateStudentLeader = async (
+  id: number,
+  adminStudentLeaderBody: AdminStudentLeaderBody,
+  options?: RequestInit,
+): Promise<StudentLeaderEntry> => {
+  return customFetch<StudentLeaderEntry>(getAdminUpdateStudentLeaderUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(adminStudentLeaderBody),
+  });
+};
+
+export const getAdminUpdateStudentLeaderMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminUpdateStudentLeader>>,
+    TError,
+    { id: number; data: BodyType<AdminStudentLeaderBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminUpdateStudentLeader>>,
+  TError,
+  { id: number; data: BodyType<AdminStudentLeaderBody> },
+  TContext
+> => {
+  const mutationKey = ["adminUpdateStudentLeader"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminUpdateStudentLeader>>,
+    { id: number; data: BodyType<AdminStudentLeaderBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return adminUpdateStudentLeader(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminUpdateStudentLeaderMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminUpdateStudentLeader>>
+>;
+export type AdminUpdateStudentLeaderMutationBody =
+  BodyType<AdminStudentLeaderBody>;
+export type AdminUpdateStudentLeaderMutationError = ErrorType<void>;
+
+/**
+ * @summary Update a student leader entry
+ */
+export const useAdminUpdateStudentLeader = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminUpdateStudentLeader>>,
+    TError,
+    { id: number; data: BodyType<AdminStudentLeaderBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminUpdateStudentLeader>>,
+  TError,
+  { id: number; data: BodyType<AdminStudentLeaderBody> },
+  TContext
+> => {
+  return useMutation(getAdminUpdateStudentLeaderMutationOptions(options));
+};
+
+/**
+ * @summary Archive current quarter and create the next one
+ */
+export const getAdminAdvanceStudentLeaderQuarterUrl = () => {
+  return `/api/admin/student-leader/advance`;
+};
+
+export const adminAdvanceStudentLeaderQuarter = async (
+  adminAdvanceQuarterBody: AdminAdvanceQuarterBody,
+  options?: RequestInit,
+): Promise<StudentLeaderEntry> => {
+  return customFetch<StudentLeaderEntry>(
+    getAdminAdvanceStudentLeaderQuarterUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(adminAdvanceQuarterBody),
+    },
+  );
+};
+
+export const getAdminAdvanceStudentLeaderQuarterMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminAdvanceStudentLeaderQuarter>>,
+    TError,
+    { data: BodyType<AdminAdvanceQuarterBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminAdvanceStudentLeaderQuarter>>,
+  TError,
+  { data: BodyType<AdminAdvanceQuarterBody> },
+  TContext
+> => {
+  const mutationKey = ["adminAdvanceStudentLeaderQuarter"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminAdvanceStudentLeaderQuarter>>,
+    { data: BodyType<AdminAdvanceQuarterBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return adminAdvanceStudentLeaderQuarter(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminAdvanceStudentLeaderQuarterMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminAdvanceStudentLeaderQuarter>>
+>;
+export type AdminAdvanceStudentLeaderQuarterMutationBody =
+  BodyType<AdminAdvanceQuarterBody>;
+export type AdminAdvanceStudentLeaderQuarterMutationError = ErrorType<void>;
+
+/**
+ * @summary Archive current quarter and create the next one
+ */
+export const useAdminAdvanceStudentLeaderQuarter = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminAdvanceStudentLeaderQuarter>>,
+    TError,
+    { data: BodyType<AdminAdvanceQuarterBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminAdvanceStudentLeaderQuarter>>,
+  TError,
+  { data: BodyType<AdminAdvanceQuarterBody> },
+  TContext
+> => {
+  return useMutation(
+    getAdminAdvanceStudentLeaderQuarterMutationOptions(options),
+  );
+};
