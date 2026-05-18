@@ -219,6 +219,21 @@ export default function Home() {
               <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </div>
           </a>
+          <Link
+            href="/student-leader"
+            className="group bg-background hover:bg-card transition-colors p-5 flex flex-col gap-2 min-h-[90px]"
+          >
+            <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-primary">
+              07 · Recognition
+            </p>
+            <h3 className="font-serif text-2xl tracking-tight leading-tight flex-1">
+              Student Leader <em className="italic font-light">of the Quarter</em>
+            </h3>
+            <div className="flex items-center justify-between text-sm text-muted-foreground group-hover:text-primary transition-colors">
+              <span>celebrating outstanding MBAA leadership</span>
+              <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </div>
+          </Link>
         </div>
         <div className="mt-8 flex justify-center">
           <Link

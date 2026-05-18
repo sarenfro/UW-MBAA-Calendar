@@ -11,6 +11,7 @@ import Directory from "@/pages/directory";
 import Documents from "@/pages/documents";
 import Tickets from "@/pages/tickets";
 import TicketsDashboard from "@/pages/tickets-dashboard";
+import StudentLeader from "@/pages/student-leader";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/documents" component={Documents} />
       <Route path="/tickets" component={Tickets} />
       <Route path="/tickets/dashboard" component={TicketsDashboard} />
+      <Route path="/student-leader" component={StudentLeader} />
       <Route component={NotFound} />
     </Switch>
   );
