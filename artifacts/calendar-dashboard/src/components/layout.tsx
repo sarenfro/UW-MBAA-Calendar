@@ -17,7 +17,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 UW Foster
               </span>
               <span className="font-serif text-xl tracking-tight pt-0.5">
-                MBAA <em className="italic font-light">Calendar</em>
+                MBAA <em className="italic font-light">Hub</em>
               </span>
             </div>
           </Link>
