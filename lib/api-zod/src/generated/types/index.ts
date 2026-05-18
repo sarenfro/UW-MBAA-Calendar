@@ -42,6 +42,8 @@ export * from "./memberMembershipsResponse";
 export * from "./memberProgram";
 export * from "./membershipRecord";
 export * from "./membershipSummary";
+export * from "./nominationBody";
+export * from "./nominationResponse";
 export * from "./programBreakdown";
 export * from "./renewalForecast";
 export * from "./requestAccessBody";

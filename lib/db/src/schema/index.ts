@@ -11,3 +11,4 @@ export * from "./doc_files";
 export * from "./tickets";
 export * from "./ticket_messages";
 export * from "./student_leaders";
+export * from "./student_leader_nominations";

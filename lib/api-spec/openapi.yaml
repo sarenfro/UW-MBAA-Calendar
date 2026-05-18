@@ -832,6 +832,29 @@ paths:
         "404":
           description: No current entry found
 
+  /student-leader/nominate:
+    post:
+      operationId: submitStudentLeaderNomination
+      tags: [public]
+      summary: Submit a nomination for the current quarter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NominationBody"
+      responses:
+        "201":
+          description: Nomination submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NominationResponse"
+        "400":
+          description: Validation error or nominations closed
+        "404":
+          description: No active quarter
+
   /student-leader/history:
     get:
       operationId: listStudentLeaderHistory
@@ -1539,6 +1562,45 @@ components:
           type: string
       required:
         - password
+
+    NominationBody:
+      type: object
+      properties:
+        nominatorName:
+          type: string
+        nominatorEmail:
+          type: string
+        nominatorClass:
+          type: string
+        nomineeName:
+          type: string
+        nomineeClass:
+          type: string
+        leadershipReason:
+          type: string
+      required:
+        - nominatorName
+        - nominatorEmail
+        - nomineeName
+        - nomineeClass
+        - leadershipReason
+
+    NominationResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        nomineeName:
+          type: string
+        nominatorName:
+          type: string
+        quarter:
+          type: string
+      required:
+        - id
+        - nomineeName
+        - nominatorName
+        - quarter
 
     AdminAdvanceQuarterBody:
       type: object

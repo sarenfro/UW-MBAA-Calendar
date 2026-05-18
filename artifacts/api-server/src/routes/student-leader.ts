@@ -3,7 +3,7 @@ import { eq, desc } from "drizzle-orm";
 import { z } from "zod/v4";
 import multer from "multer";
 import path from "node:path";
-import { db, studentLeadersTable } from "@workspace/db";
+import { db, studentLeadersTable, studentLeaderNominationsTable } from "@workspace/db";
 
 const router: IRouter = Router();
 
@@ -56,6 +56,53 @@ router.get("/student-leader/history", async (_req, res): Promise<void> => {
     .where(eq(studentLeadersTable.isCurrent, false))
     .orderBy(desc(studentLeadersTable.createdAt));
   res.json(rows.filter((r) => r.winnerName));
+});
+
+// POST /api/student-leader/nominate
+const nominationBodySchema = z.object({
+  nominatorName: z.string().min(1),
+  nominatorEmail: z.email(),
+  nominatorClass: z.string().optional(),
+  nomineeName: z.string().min(1),
+  nomineeClass: z.string().min(1),
+  leadershipReason: z.string().min(1),
+});
+
+router.post("/student-leader/nominate", async (req, res): Promise<void> => {
+  const [current] = await ensureCurrentEntry();
+  if (!current) { res.status(404).json({ error: "No active quarter" }); return; }
+  if (current.status !== "nominations_open") {
+    res.status(400).json({ error: "Nominations are not currently open" });
+    return;
+  }
+
+  const parsed = nominationBodySchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid body", details: parsed.error.issues });
+    return;
+  }
+
+  const { nominatorName, nominatorEmail, nominatorClass, nomineeName, nomineeClass, leadershipReason } = parsed.data;
+
+  const [row] = await db
+    .insert(studentLeaderNominationsTable)
+    .values({
+      quarterId: current.id,
+      nominatorName,
+      nominatorEmail,
+      nominatorClass: nominatorClass ?? null,
+      nomineeName,
+      nomineeClass,
+      leadershipReason,
+    })
+    .returning();
+
+  res.status(201).json({
+    id: row.id,
+    nomineeName: row.nomineeName,
+    nominatorName: row.nominatorName,
+    quarter: current.quarter,
+  });
 });
 
 // ─── Admin ────────────────────────────────────────────────────────────────────

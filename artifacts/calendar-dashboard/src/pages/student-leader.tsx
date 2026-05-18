@@ -1,10 +1,24 @@
+import { useState } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Award, Star, Users } from "lucide-react";
+import { ArrowLeft, Award, Star, Users, CheckCircle2 } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   useGetStudentLeaderCurrent,
   useListStudentLeaderHistory,
+  useSubmitStudentLeaderNomination,
+  type NominationResponse,
 } from "@workspace/api-client-react";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -13,12 +27,276 @@ const STATUS_LABELS: Record<string, string> = {
   announced: "Winner Announced",
 };
 
+const CLASS_OPTIONS = ["FT 2027", "FT 2028"];
+
+// ─── Nomination form ──────────────────────────────────────────────────────────
+
+interface NominationFormProps {
+  quarter: string;
+}
+
+function NominationForm({ quarter }: NominationFormProps) {
+  const [form, setForm] = useState({
+    nominatorName: "",
+    nominatorEmail: "",
+    nominatorClass: "",
+    nomineeName: "",
+    nomineeClass: "",
+    leadershipReason: "",
+  });
+  const [errors, setErrors] = useState<Partial<Record<keyof typeof form, string>>>({});
+  const [submitted, setSubmitted] = useState<NominationResponse | null>(null);
+
+  const mutation = useSubmitStudentLeaderNomination({
+    mutation: {
+      onSuccess: (data) => setSubmitted(data),
+    },
+  });
+
+  function validate() {
+    const e: typeof errors = {};
+    if (!form.nominatorName.trim()) e.nominatorName = "Required";
+    if (!form.nominatorEmail.trim()) e.nominatorEmail = "Required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.nominatorEmail)) e.nominatorEmail = "Enter a valid email";
+    if (!form.nomineeName.trim()) e.nomineeName = "Required";
+    if (!form.nomineeClass) e.nomineeClass = "Required";
+    if (!form.leadershipReason.trim()) e.leadershipReason = "Required";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!validate()) return;
+    mutation.mutate({
+      data: {
+        nominatorName: form.nominatorName.trim(),
+        nominatorEmail: form.nominatorEmail.trim(),
+        nominatorClass: form.nominatorClass || undefined,
+        nomineeName: form.nomineeName.trim(),
+        nomineeClass: form.nomineeClass,
+        leadershipReason: form.leadershipReason.trim(),
+      },
+    });
+  }
+
+  function set(field: keyof typeof form, value: string) {
+    setForm((f) => ({ ...f, [field]: value }));
+    if (errors[field]) setErrors((er) => ({ ...er, [field]: undefined }));
+  }
+
+  // ── Confirmation ────────────────────────────────────────────────────────────
+  if (submitted) {
+    const nominatorFirst = submitted.nominatorName.split(" ")[0];
+    const nomineeFirst = submitted.nomineeName.split(" ")[0];
+    return (
+      <div className="border border-emerald-200 bg-emerald-50/60 p-8 flex flex-col gap-4">
+        <div className="flex items-center gap-3">
+          <CheckCircle2 className="h-6 w-6 text-emerald-600 shrink-0" />
+          <p className="font-serif text-2xl tracking-tight text-emerald-900">
+            Nomination submitted
+          </p>
+        </div>
+        <p className="text-sm text-emerald-800 leading-relaxed max-w-lg">
+          Thanks, {nominatorFirst}. Your nomination for{" "}
+          <span className="font-semibold">{submitted.nomineeName}</span> has been
+          submitted. The MBAA leadership team will review nominations after the
+          quarter closes and announce the recipients at the next all-MBA event.
+          All nominees are notified that they were nominated, even if they aren't
+          selected, so {nomineeFirst} will know you recognized them.
+        </p>
+      </div>
+    );
+  }
+
+  // ── Form ────────────────────────────────────────────────────────────────────
+  return (
+    <form onSubmit={handleSubmit} noValidate className="space-y-6">
+      {/* Intro */}
+      <div className="border-l-2 border-primary/30 pl-4 text-sm text-muted-foreground leading-relaxed">
+        Each quarter, the Foster MBA Association recognizes one student from each
+        full-time class who has made a positive impact on our community and
+        demonstrated the core values of Foster. Anyone can submit a nomination,
+        and the nominee doesn't need to hold a formal leadership role. Nominations
+        for{" "}
+        <span className="font-medium text-foreground">[{quarter}]</span> close on{" "}
+        <span className="font-medium text-foreground">[date]</span> at{" "}
+        <span className="font-medium text-foreground">[time]</span>.
+      </div>
+
+      {/* Nominator section */}
+      <div className="space-y-4">
+        <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
+          About you
+        </p>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="nominatorName" className="text-sm font-medium">
+            Your full name <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="nominatorName"
+            value={form.nominatorName}
+            onChange={(e) => set("nominatorName", e.target.value)}
+            placeholder="Jane Smith"
+            className={`rounded-sm h-9 text-sm border-border/60 ${errors.nominatorName ? "border-destructive" : ""}`}
+          />
+          {errors.nominatorName ? (
+            <p className="text-xs text-destructive">{errors.nominatorName}</p>
+          ) : (
+            <p className="text-xs text-muted-foreground/70">
+              Nominations are attributed, so the nominee will see who nominated them.
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="nominatorEmail" className="text-sm font-medium">
+            Your email <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="nominatorEmail"
+            type="email"
+            value={form.nominatorEmail}
+            onChange={(e) => set("nominatorEmail", e.target.value)}
+            placeholder="jsmith@uw.edu"
+            className={`rounded-sm h-9 text-sm border-border/60 ${errors.nominatorEmail ? "border-destructive" : ""}`}
+          />
+          {errors.nominatorEmail ? (
+            <p className="text-xs text-destructive">{errors.nominatorEmail}</p>
+          ) : (
+            <p className="text-xs text-muted-foreground/70">
+              We'll send a confirmation here once your nomination is received.
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="nominatorClass" className="text-sm font-medium">
+            Your class{" "}
+            <span className="text-muted-foreground/60 font-normal">(optional)</span>
+          </Label>
+          <Select value={form.nominatorClass} onValueChange={(v) => set("nominatorClass", v)}>
+            <SelectTrigger id="nominatorClass" className="rounded-sm h-9 text-sm border-border/60 w-48">
+              <SelectValue placeholder="Select class…" />
+            </SelectTrigger>
+            <SelectContent>
+              {CLASS_OPTIONS.map((c) => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-border/40" />
+
+      {/* Nominee section */}
+      <div className="space-y-4">
+        <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
+          About your nominee
+        </p>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="nomineeName" className="text-sm font-medium">
+            Nominee's full name <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="nomineeName"
+            value={form.nomineeName}
+            onChange={(e) => set("nomineeName", e.target.value)}
+            placeholder="Alex Johnson"
+            className={`rounded-sm h-9 text-sm border-border/60 ${errors.nomineeName ? "border-destructive" : ""}`}
+          />
+          {errors.nomineeName ? (
+            <p className="text-xs text-destructive">{errors.nomineeName}</p>
+          ) : (
+            <p className="text-xs text-muted-foreground/70">
+              Please use their full name as it appears in the Foster directory. You
+              can't nominate yourself.
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="nomineeClass" className="text-sm font-medium">
+            Which class is this person in? <span className="text-destructive">*</span>
+          </Label>
+          <Select
+            value={form.nomineeClass}
+            onValueChange={(v) => set("nomineeClass", v)}
+          >
+            <SelectTrigger
+              id="nomineeClass"
+              className={`rounded-sm h-9 text-sm border-border/60 w-48 ${errors.nomineeClass ? "border-destructive" : ""}`}
+            >
+              <SelectValue placeholder="Select class…" />
+            </SelectTrigger>
+            <SelectContent>
+              {CLASS_OPTIONS.map((c) => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.nomineeClass && (
+            <p className="text-xs text-destructive">{errors.nomineeClass}</p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="leadershipReason" className="text-sm font-medium">
+            How was this student a great leader? Any other comments?{" "}
+            <span className="text-destructive">*</span>
+          </Label>
+          <Textarea
+            id="leadershipReason"
+            value={form.leadershipReason}
+            onChange={(e) => set("leadershipReason", e.target.value)}
+            rows={6}
+            placeholder="Tell us what they did, who it helped, and why it mattered…"
+            className={`rounded-sm text-sm border-border/60 resize-none ${errors.leadershipReason ? "border-destructive" : ""}`}
+          />
+          {errors.leadershipReason ? (
+            <p className="text-xs text-destructive">{errors.leadershipReason}</p>
+          ) : (
+            <p className="text-xs text-muted-foreground/70">
+              Specific stories and examples carry more weight than general praise.
+              What did they do, who did it help, and why did it matter? A few
+              sentences is great, a few paragraphs is fine too. Please submit one
+              nomination per person; if you want to recognize multiple classmates,
+              submit a separate form for each.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {mutation.isError && (
+        <p className="text-xs text-destructive">
+          Something went wrong. Please try again.
+        </p>
+      )}
+
+      <Button
+        type="submit"
+        disabled={mutation.isPending}
+        className="rounded-sm font-semibold tracking-[0.14em] uppercase text-xs h-10 px-6"
+      >
+        {mutation.isPending ? "Submitting…" : "Submit nomination"}
+      </Button>
+    </form>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function StudentLeader() {
   const { data: current, isLoading } = useGetStudentLeaderCurrent();
   const { data: history } = useListStudentLeaderHistory();
 
   const isAnnounced = current?.status === "announced";
   const hasWinner = isAnnounced && !!current?.winnerName;
+  const isNominationsOpen = current?.status === "nominations_open";
 
   return (
     <Layout>
@@ -56,13 +334,15 @@ export default function StudentLeader() {
                 <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-muted-foreground">
                   {current.quarter}
                 </p>
-                <span className={`text-[10px] font-semibold tracking-[0.16em] uppercase px-2 py-0.5 rounded-full border ${
-                  current.status === "announced"
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : current.status === "nominations_closed"
-                    ? "bg-amber-50 text-amber-700 border-amber-200"
-                    : "bg-primary/5 text-primary border-primary/20"
-                }`}>
+                <span
+                  className={`text-[10px] font-semibold tracking-[0.16em] uppercase px-2 py-0.5 rounded-full border ${
+                    current.status === "announced"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : current.status === "nominations_closed"
+                      ? "bg-amber-50 text-amber-700 border-amber-200"
+                      : "bg-primary/5 text-primary border-primary/20"
+                  }`}
+                >
                   {STATUS_LABELS[current.status] ?? current.status}
                 </span>
               </div>
@@ -147,7 +427,7 @@ export default function StudentLeader() {
                     </p>
                     <p className="text-sm text-muted-foreground/70 mt-1">
                       {current.status === "nominations_open"
-                        ? `Submit your nominations for ${current.quarter}.`
+                        ? `Submit your nominations for ${current.quarter} below.`
                         : `The ${current.quarter} winner will be revealed here shortly.`}
                     </p>
                   </div>
@@ -163,6 +443,26 @@ export default function StudentLeader() {
             </div>
           )}
         </section>
+
+        {/* Nomination form — only when nominations are open */}
+        {isNominationsOpen && current && (
+          <section className="mb-16">
+            <div className="border-t border-border/60 pt-10 mb-8">
+              <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-primary mb-3">
+                Nominate
+              </p>
+              <h2 className="font-serif text-3xl md:text-4xl leading-[1.05] tracking-tight mb-2">
+                Nominate a Student Leader{" "}
+                <em className="italic font-light text-primary">of the Quarter</em>
+              </h2>
+              <p className="text-base text-muted-foreground max-w-xl leading-relaxed">
+                Recognize a classmate who made the Foster MBA community better this
+                quarter.
+              </p>
+            </div>
+            <NominationForm quarter={current.quarter} />
+          </section>
+        )}
 
         {/* Past winners */}
         <section>

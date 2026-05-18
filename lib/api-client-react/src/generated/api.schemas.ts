@@ -296,6 +296,22 @@ export interface AdminStudentLeaderBody {
   reason?: string;
 }
 
+export interface NominationBody {
+  nominatorName: string;
+  nominatorEmail: string;
+  nominatorClass?: string;
+  nomineeName: string;
+  nomineeClass: string;
+  leadershipReason: string;
+}
+
+export interface NominationResponse {
+  id: number;
+  nomineeName: string;
+  nominatorName: string;
+  quarter: string;
+}
+
 export interface AdminAdvanceQuarterBody {
   password: string;
   nextQuarter: string;

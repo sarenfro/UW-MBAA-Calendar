@@ -682,6 +682,18 @@ export const GetStudentLeaderCurrentResponse = zod.object({
 });
 
 /**
+ * @summary Submit a nomination for the current quarter
+ */
+export const SubmitStudentLeaderNominationBody = zod.object({
+  nominatorName: zod.string(),
+  nominatorEmail: zod.string(),
+  nominatorClass: zod.string().optional(),
+  nomineeName: zod.string(),
+  nomineeClass: zod.string(),
+  leadershipReason: zod.string(),
+});
+
+/**
  * @summary List past student leader winners
  */
 export const ListStudentLeaderHistoryResponseItem = zod.object({

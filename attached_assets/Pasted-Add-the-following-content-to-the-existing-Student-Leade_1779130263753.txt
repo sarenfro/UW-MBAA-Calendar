@@ -1,0 +1,39 @@
+Add the following content to the existing "Student Leader of the Quarter" nomination page.
+
+## Page header content
+
+Title: Nominate a Student Leader of the Quarter
+
+Subhead: Recognize a classmate who made the Foster MBA community better this quarter.
+
+## Intro paragraph (above the form)
+
+Each quarter, the Foster MBA Association recognizes one student from each full-time class who has made a positive impact on our community and demonstrated the core values of Foster. Anyone can submit a nomination, and the nominee doesn't need to hold a formal leadership role. Nominations for [Quarter, Year] close on [date] at [time].
+
+(Leave the bracketed values as editable placeholders.)
+
+## Form fields
+
+1. Your full name (required)
+   Helper text: Nominations are attributed, so the nominee will see who nominated them.
+
+2. Your email (required)
+   Helper text: We'll send a confirmation here once your nomination is received.
+
+3. Your class (optional)
+   Options: FT 2027, FT 2028
+
+4. Nominee's full name (required)
+   Helper text: Please use their full name as it appears in the Foster directory. You can't nominate yourself.
+
+5. Which class is this person in? (required)
+   Options: FT 2027, FT 2028
+
+6. How was this student a great leader? Any other comments? (required)
+   Helper text: Specific stories and examples carry more weight than general praise. What did they do, who did it help, and why did it matter? A few sentences is great, a few paragraphs is fine too. Please submit one nomination per person; if you want to recognize multiple classmates, submit a separate form for each.
+
+Submit button label: Submit nomination
+
+## Confirmation message (shown after submit)
+
+Thanks, [nominator first name]. Your nomination for [nominee name] has been submitted. The MBAA leadership team will review nominations after the quarter closes and announce the recipients at the next all-MBA event. All nominees are notified that they were nominated, even if they aren't selected, so [nominee first name] will know you recognized them.

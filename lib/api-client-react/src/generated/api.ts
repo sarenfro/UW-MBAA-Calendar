@@ -46,6 +46,8 @@ import type {
   Member,
   MemberMembershipsResponse,
   MembershipSummary,
+  NominationBody,
+  NominationResponse,
   RequestAccessBody,
   RequestAccessResponse,
   SearchMembersParams,
@@ -2693,6 +2695,96 @@ export function useGetStudentLeaderCurrent<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Submit a nomination for the current quarter
+ */
+export const getSubmitStudentLeaderNominationUrl = () => {
+  return `/api/student-leader/nominate`;
+};
+
+export const submitStudentLeaderNomination = async (
+  nominationBody: NominationBody,
+  options?: RequestInit,
+): Promise<NominationResponse> => {
+  return customFetch<NominationResponse>(
+    getSubmitStudentLeaderNominationUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(nominationBody),
+    },
+  );
+};
+
+export const getSubmitStudentLeaderNominationMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof submitStudentLeaderNomination>>,
+    TError,
+    { data: BodyType<NominationBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof submitStudentLeaderNomination>>,
+  TError,
+  { data: BodyType<NominationBody> },
+  TContext
+> => {
+  const mutationKey = ["submitStudentLeaderNomination"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof submitStudentLeaderNomination>>,
+    { data: BodyType<NominationBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return submitStudentLeaderNomination(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SubmitStudentLeaderNominationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof submitStudentLeaderNomination>>
+>;
+export type SubmitStudentLeaderNominationMutationBody =
+  BodyType<NominationBody>;
+export type SubmitStudentLeaderNominationMutationError = ErrorType<void>;
+
+/**
+ * @summary Submit a nomination for the current quarter
+ */
+export const useSubmitStudentLeaderNomination = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof submitStudentLeaderNomination>>,
+    TError,
+    { data: BodyType<NominationBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof submitStudentLeaderNomination>>,
+  TError,
+  { data: BodyType<NominationBody> },
+  TContext
+> => {
+  return useMutation(getSubmitStudentLeaderNominationMutationOptions(options));
+};
 
 /**
  * @summary List past student leader winners
